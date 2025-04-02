@@ -15,8 +15,8 @@ int main(void) {
     };
 
     init_snf_layer(ROLE_AS);
-    int8_t ret = register_snf_entity(&args);
+    int8_t ret = register_snf_en(&args);
 
-    ret = unregister_snf_entity(1234);
+    ret = unregister_snf_en(1234);
     destory_snf_layer();
 }

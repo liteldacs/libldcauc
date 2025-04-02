@@ -61,9 +61,9 @@ int8_t destory_snf_layer();
 
 int8_t entry_LME_AUTH(void *args);
 
-int8_t register_snf_entity(snf_args_t *snf_args);
+int8_t register_snf_en(snf_args_t *snf_args);
 
-int8_t unregister_snf_entity(uint16_t SAC);
+int8_t unregister_snf_en(uint16_t SAC);
 
 
 #endif //SNF_H

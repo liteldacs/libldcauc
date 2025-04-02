@@ -12,6 +12,7 @@
 #define LDCAUC_FAIL -1
 #define LDCAUC_WRONG_PARA -2
 #define LDCAUC_NULL -3
+#define LDCAUC_INTERNAL_ERROR -4
 
 #define ROLE_AS 1
 #define ROLE_GS 2

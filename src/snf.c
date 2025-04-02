@@ -80,10 +80,18 @@ int8_t clear_snf_en(snf_entity_t *snf_en) {
 int8_t entry_LME_AUTH(void *args) {
     snf_args_t *snf_args = (snf_args_t *) args;
     snf_obj.as_snf_en = init_snf_en(ROLE_AS, snf_args);
+
+    if ((err = change_state(&snf_obj.as_snf_en->auth_fsm, LD_AUTHC_EV_DEFAULT,
+                            &(fsm_event_data_t){
+                                &ld_authc_fsm_events[LD_AUTHC_A1], snf_obj.as_snf_en
+                            }))) {
+        log_error("cant change state correctly, %d", err);
+        return LDCAUC_INTERNAL_ERROR;
+    }
     return LDCAUC_OK;
 }
 
-int8_t register_snf_entity(snf_args_t *snf_args) {
+int8_t register_snf_en(snf_args_t *snf_args) {
     if (snf_args->AS_SAC >= 4096 || snf_args->AS_CURR_GS_SAC >= 4096) return LDCAUC_WRONG_PARA;
     snf_entity_t *en = init_snf_en(ROLE_SGW, snf_args);
     if (en == NULL) {
@@ -94,18 +102,12 @@ int8_t register_snf_entity(snf_args_t *snf_args) {
     return LDCAUC_OK;
 }
 
-int8_t unregister_snf_entity(uint16_t SAC) {
+int8_t unregister_snf_en(uint16_t SAC) {
     return delete_enode_by_sac(SAC, clear_snf_en);
 }
 
-static snf_entity_t *init_snpsub_entity(uint16_t SAC) {
-    snf_entity_t *en = (snf_entity_t *) calloc(1, sizeof(snf_entity_t));
-    en->AS_SAC = SAC;
-
-    return en;
-}
-
-static void free_snpsub_entity(snf_entity_t *en) {
+static void free_snf_en(snf_entity_t *en) {
+    clear_snf_en(en);
     free(en);
 }
 
@@ -135,7 +137,8 @@ static struct hashmap *init_enode_map() {
 static const void *set_enode(snf_entity_t *en) {
     const void *ret = hashmap_set(snf_obj.snf_emap, en);
 
-    free_snpsub_entity(en);
+    // free_snf_entity(en);
+    free(en);
 
     return ret;
 }
