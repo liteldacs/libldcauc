@@ -5,13 +5,16 @@
 #include "crypto/authc.h"
 #include "crypto/key.h"
 
+
 static struct hashmap *init_enode_map();
 
 static const void *set_enode(snf_entity_t *en);
 
 static int8_t delete_enode_by_sac(uint16_t as_sac, int8_t (*clear_func)(snf_entity_t *snf_en));
 
+
 snf_obj_t snf_obj = {
+    .PROTOCOL_VER = PROTECT_VERSION,
 };
 
 int8_t init_snf_layer(int8_t role) {
@@ -77,9 +80,14 @@ int8_t clear_snf_en(snf_entity_t *snf_en) {
     return LDCAUC_OK;
 }
 
+// typedef void (*completion_cb)(void *user_data, int result);
+//
+// void lib_entry(completion_cb cb, void *user_data);
+
 int8_t entry_LME_AUTH(void *args) {
     snf_args_t *snf_args = (snf_args_t *) args;
     snf_obj.as_snf_en = init_snf_en(ROLE_AS, snf_args);
+    l_err err;
 
     if ((err = change_state(&snf_obj.as_snf_en->auth_fsm, LD_AUTHC_EV_DEFAULT,
                             &(fsm_event_data_t){
@@ -88,6 +96,10 @@ int8_t entry_LME_AUTH(void *args) {
         log_error("cant change state correctly, %d", err);
         return LDCAUC_INTERNAL_ERROR;
     }
+    return LDCAUC_OK;
+}
+
+int8_t exit_LME_AUTH(void *args) {
     return LDCAUC_OK;
 }
 
@@ -119,14 +131,17 @@ static uint64_t hash_enode(const void *item, uint64_t seed0, uint64_t seed1) {
 
 static snf_entity_t *get_enode(const uint16_t as_sac) {
     return hashmap_get(snf_obj.snf_emap, &(snf_entity_t){
-                           .AS_SAC = as_sac,
-                       });
+                           .
+                           AS_SAC = as_sac,
+                       }
+    );
 }
 
 static bool has_enode(const uint16_t as_sac) {
     return hashmap_get(snf_obj.snf_emap, &(snf_entity_t){
-                           .AS_SAC = as_sac,
-                       }) != NULL;
+                           . AS_SAC = as_sac,
+                       }
+           ) != NULL;
 }
 
 static struct hashmap *init_enode_map() {

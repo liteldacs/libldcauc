@@ -6,7 +6,7 @@
 #define LDACS_SIM_AUTH_H
 
 #include "secure_core.h"
-#include "ld_santilizer.h"
+#include <ld_santilizer.h>
 
 #define AUTHC_ALG_S_LEN 4
 #define AUTHC_KLEN_LEN 2
@@ -56,6 +56,13 @@ enum AUTHC_KLEN_E {
     AUTHC_KLEN_256 = 0x2,
 };
 
+enum PID_E {
+    PID_RESERVED = 0x0,
+    PID_SIGN = 0x1,
+    PID_MAC = 0x2,
+    PID_BOTH = 0x3,
+};
+
 
 #pragma pack(1)
 
@@ -69,6 +76,14 @@ typedef struct auc_sharedinfo_s {
     buffer_t *N_2;
 } auc_sharedinfo_t;
 #pragma pack()
+
+extern const char *authc_maclen_name[];
+extern const char *authc_authid_name[];
+extern const char *authc_enc_name[];
+extern const char *authc_klen_name[];
+extern const char *ld_authc_fsm_states[];
+extern const char *s_type_name[];
+extern const char *pid_name[];
 
 extern struct_desc_t auc_sharedinfo_desc;
 
@@ -87,6 +102,11 @@ extern struct_desc_t auc_sharedinfo_desc;
     };                       \
     ret;                       \
 })
+
+buffer_t *get_auc_sharedinfo_buf(auc_sharedinfo_t *info);
+
+l_err generate_auc_kdf(uint8_t role, buffer_t *random, KEY_HANDLE*key_as_sgw, KEY_HANDLE*key_as_gs,
+                       buffer_t **key_as_gs_raw);
 
 
 #endif //LDACS_SIM_AUTH_H
