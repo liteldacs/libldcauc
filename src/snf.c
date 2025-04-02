@@ -14,7 +14,7 @@ static int8_t delete_enode_by_sac(uint16_t as_sac, int8_t (*clear_func)(snf_enti
 snf_obj_t snf_obj = {
 };
 
-int8_t init_snf_layer() {
+int8_t init_snf_layer(int8_t role) {
     snf_obj.snf_emap = init_enode_map();
     return LDCAUC_OK;
 }
@@ -26,7 +26,6 @@ int8_t destory_snf_layer() {
 
 static snf_entity_t *init_snf_en(uint8_t role, snf_args_t *args) {
     snf_entity_t *snf_en = calloc(1, sizeof(snf_entity_t));
-
 
     snf_en->AS_SAC = args->AS_SAC;
     snf_en->GS_UA = args->AS_CURR_GS_SAC;

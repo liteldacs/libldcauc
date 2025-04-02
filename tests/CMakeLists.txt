@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 
 
 set(tests
-        snpsub
+        snf
 )
 
 cmake_host_system_information(RESULT PRETTY_NAME QUERY DISTRIB_PRETTY_NAME)

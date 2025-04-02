@@ -14,7 +14,7 @@ int main(void) {
         .AS_CURR_GS_SAC = 2345
     };
 
-    init_snf_layer();
+    init_snf_layer(ROLE_AS);
     int8_t ret = register_snf_entity(&args);
 
     ret = unregister_snf_entity(1234);

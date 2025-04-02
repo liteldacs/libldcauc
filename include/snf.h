@@ -42,6 +42,7 @@ typedef struct snf_entity_s {
 typedef struct snf_obj_s {
     struct hashmap *snf_emap;
     snf_entity_t *as_snf_en;
+    int8_t role;
 } snf_obj_t;
 
 extern snf_obj_t snf_obj;
@@ -52,7 +53,7 @@ typedef struct snf_args_s {
     uint16_t AS_CURR_GS_SAC;
 } snf_args_t;
 
-int8_t init_snf_layer();
+int8_t init_snf_layer(int8_t role);
 
 int8_t clear_snf_en(snf_entity_t *snf_en);
 
