@@ -8,6 +8,8 @@
 #include <ld_statemachine.h>
 #include <ld_buffer.h>
 #include <ld_santilizer.h>
+#include <ldacs_sim.h>
+#include <ld_config.h>
 #include <ld_primitive.h>
 #include "ldcauc.h"
 #include "snp_sub.h"
@@ -115,7 +117,7 @@ typedef struct snf_obj_s {
     struct hashmap *snf_emap;
     snf_entity_t *as_snf_en;
     uint8_t PROTOCOL_VER;
-    int8_t role;
+    ldacs_roles role;
     uint16_t GS_SAC;
 } snf_obj_t;
 

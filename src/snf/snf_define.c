@@ -4,6 +4,7 @@
 
 #include "snf.h"
 #include "crypto/authc.h"
+#include "net/net.h"
 
 fsm_event_t ld_authc_fsm_events[] = {
     {"LD_AUTHC_A0", NULL, NULL},

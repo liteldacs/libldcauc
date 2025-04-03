@@ -27,7 +27,7 @@ bool send_gs_pkt(basic_conn_t **bcp) {
 
 static bool gs_conn_accept(net_opt_t *net_opt) {
     gs_tcp_propt_t *gs_conn;
-    if ((gs_conn = init_gs_conn(ROLE_SGW, net_opt)) == NULL) {
+    if ((gs_conn = init_gs_conn(LD_SGW, net_opt)) == NULL) {
         log_error("Cannot initialize connection!");
         return FALSE;
     }

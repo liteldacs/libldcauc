@@ -10,34 +10,34 @@
 #define RECONNECT 20
 
 
-static int make_gs_as_connect(struct sockaddr_in *to_conn_addr) {
-    struct sockaddr_in my_addr;
-    int fd;
-    if ((fd = socket(PF_INET, SOCK_DGRAM, 0)) == ERROR) return ERROR;
-
-    /*设置socket属性，端口可以重用*/
-    int opt = SO_REUSEADDR;
-    setsockopt(fd,SOL_SOCKET,SO_REUSEADDR, &opt, sizeof(opt));
-
-    zero(&my_addr);
-    my_addr.sin_family = AF_INET;
-    my_addr.sin_port = htons(config.port);
-    my_addr.sin_addr.s_addr = INADDR_ANY;
-
-    if (bind(fd, (struct sockaddr *) &my_addr, sizeof(struct sockaddr)) == ERROR) {
-        perror("bind");
-        return ERROR;
-    }
-
-    if (config.role == LD_AS) {
-        to_conn_addr->sin_port = htons(8080); //TODO: any better ways to replace 8080?
-    }
-
-    if (connect(fd, (struct sockaddr *) to_conn_addr, sizeof(struct sockaddr_in)) == ERROR) return ERROR;
-
-    return fd;
-}
-
+// static int make_gs_as_connect(struct sockaddr_in *to_conn_addr) {
+//     struct sockaddr_in my_addr;
+//     int fd;
+//     if ((fd = socket(PF_INET, SOCK_DGRAM, 0)) == ERROR) return ERROR;
+//
+//     /*设置socket属性，端口可以重用*/
+//     int opt = SO_REUSEADDR;
+//     setsockopt(fd,SOL_SOCKET,SO_REUSEADDR, &opt, sizeof(opt));
+//
+//     zero(&my_addr);
+//     my_addr.sin_family = AF_INET;
+//     my_addr.sin_port = htons(config.port);
+//     my_addr.sin_addr.s_addr = INADDR_ANY;
+//
+//     if (bind(fd, (struct sockaddr *) &my_addr, sizeof(struct sockaddr)) == ERROR) {
+//         perror("bind");
+//         return ERROR;
+//     }
+//
+//     if (config.role == LD_AS) {
+//         to_conn_addr->sin_port = htons(8080); //TODO: any better ways to replace 8080?
+//     }
+//
+//     if (connect(fd, (struct sockaddr *) to_conn_addr, sizeof(struct sockaddr_in)) == ERROR) return ERROR;
+//
+//     return fd;
+// }
+//
 //
 // static int make_gs_as_server(uint16_t port) {
 //     struct sockaddr_in saddr;
@@ -252,15 +252,15 @@ static int add_listen_fd(int server_fd) {
 }
 
 
-static int init_as_handler(basic_conn_t *bc) {
-    //if(first_request_handle(bc, broadcast_recv()) == ERROR) return ERROR;
-    return make_gs_as_connect((struct sockaddr_in *) &bc->saddr);
-}
-
-static int init_gs_as_handler(basic_conn_t *bc) {
-    if (bc->server_fd != DEFAULT_FD) if (first_request_handle(bc, bc->server_fd) == ERROR) return ERROR;
-    return make_gs_as_connect((struct sockaddr_in *) &bc->saddr);
-}
+// static int init_as_handler(basic_conn_t *bc) {
+//     //if(first_request_handle(bc, broadcast_recv()) == ERROR) return ERROR;
+//     return make_gs_as_connect((struct sockaddr_in *) &bc->saddr);
+// }
+//
+// static int init_gs_as_handler(basic_conn_t *bc) {
+//     if (bc->server_fd != DEFAULT_FD) if (first_request_handle(bc, bc->server_fd) == ERROR) return ERROR;
+//     return make_gs_as_connect((struct sockaddr_in *) &bc->saddr);
+// }
 
 static int init_std_tcp_conn_handler(basic_conn_t *bc) {
     // return make_std_tcp_connect((struct sockaddr_in *) &bc->saddr, config.gsnf_addr, config.gsnf_port);
@@ -387,19 +387,6 @@ static int read_packet(int fd, buffer_t *but) {
     }
 }
 
-int first_request_handle(basic_conn_t *bc, int pre_fd) {
-    if (!pre_fd)
-        return ERROR;
-
-    if (read_first_packet(bc, pre_fd) == ERROR)
-        return ERROR;
-
-    if (config.role == LD_AS) {
-        //close_bd_fd();  /* close the broadcast temp udp fd */
-    }
-
-    return TRUE;
-}
 
 int request_handle(basic_conn_t **bcp) {
     basic_conn_t *bc = *bcp;

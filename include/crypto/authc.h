@@ -106,7 +106,7 @@ extern struct_desc_t auc_sharedinfo_desc;
 
 buffer_t *get_auc_sharedinfo_buf(auc_sharedinfo_t *info);
 
-l_err generate_auc_kdf(uint8_t role, buffer_t *random, KEY_HANDLE*key_as_sgw, KEY_HANDLE*key_as_gs,
+l_err generate_auc_kdf(ldacs_roles role, buffer_t *random, KEY_HANDLE*key_as_sgw, KEY_HANDLE*key_as_gs,
                        buffer_t **key_as_gs_raw);
 
 

@@ -160,7 +160,7 @@ buffer_t *get_auc_sharedinfo_buf(auc_sharedinfo_t *info) {
     return info_buf;
 }
 
-l_err generate_auc_kdf(uint8_t role, buffer_t *random, KEY_HANDLE*key_as_sgw, KEY_HANDLE*key_as_gs,
+l_err generate_auc_kdf(ldacs_roles role, buffer_t *random, KEY_HANDLE*key_as_sgw, KEY_HANDLE*key_as_gs,
                        buffer_t **key_as_gs_raw) {
     UA_STR(ua_as);
     UA_STR(ua_gs);
@@ -170,11 +170,11 @@ l_err generate_auc_kdf(uint8_t role, buffer_t *random, KEY_HANDLE*key_as_sgw, KE
     get_ua_str(10000, ua_sgw);
 
     switch (role) {
-        case ROLE_AS:
+        case LD_AS:
             as_derive_keys(random->ptr, random->len, ua_as, ua_gs, ua_sgw, key_as_sgw, key_as_gs);
         // log_buf(LOG_ERROR, "AS KEY", (*(buffer_t **)key_as_gs)->ptr, (*(buffer_t **)key_as_gs)->len);
             break;
-        case ROLE_SGW:
+        case LD_SGW:
             sgw_derive_keys(random->ptr, random->len, ua_as, ua_gs, ua_sgw, key_as_sgw, key_as_gs_raw);
 
         // log_buf(LOG_ERROR, "SGW KEY", (*(buffer_t **)key_as_gs_raw)->ptr, (*(buffer_t **)key_as_gs_raw)->len);

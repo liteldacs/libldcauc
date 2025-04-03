@@ -42,11 +42,11 @@ static snf_entity_t *init_snf_en(snf_args_t *args) {
     UA_STR(ua_as);
     UA_STR(ua_sgw);
     if (role == ROLE_AS) {
-        key_get_handle(role, get_ua_str(snf_en->AS_UA, ua_as), get_ua_str(snf_en->GS_UA, ua_sgw), ROOT_KEY,
+        key_get_handle(LD_AS, get_ua_str(snf_en->AS_UA, ua_as), get_ua_str(snf_en->GS_UA, ua_sgw), ROOT_KEY,
                        &snf_en->key_as_sgw_r_h);
     } else if (role == ROLE_SGW) {
         snf_en->key_as_gs_b = init_buffer_unptr();
-        key_get_handle(role, get_ua_str(snf_en->GS_UA, ua_as), get_ua_str(snf_en->AS_UA, ua_sgw), ROOT_KEY,
+        key_get_handle(LD_SGW, get_ua_str(snf_en->GS_UA, ua_as), get_ua_str(snf_en->AS_UA, ua_sgw), ROOT_KEY,
                        &snf_en->key_as_sgw_r_h);
     }
 

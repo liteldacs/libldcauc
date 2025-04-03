@@ -227,10 +227,7 @@ l_err recv_auc_key_exec(buffer_t *buf, snf_entity_t *as_man) {
     }
 
     if ((err = change_state(&as_man->auth_fsm, LD_AUTHC_EV_DEFAULT,
-                            &(fsm_event_data_t){&ld_authc_fsm_events[LD_AUTHC_G2], as_man}
-         )
-        )
-    ) {
+                            &(fsm_event_data_t){&ld_authc_fsm_events[LD_AUTHC_G2], as_man}))) {
         log_error("cant change state correctly, %d", err);
     }
 
@@ -262,23 +259,15 @@ l_err finish_auc(void *args) {
     log_info("+++++++++++++===== GS AUTH AS OK =====++++++++++++++");
     snf_entity_t *as_man = args;
     buffer_t *sdu = gen_pdu(&(gs_key_trans_t){
-                                .
-                                key = as_man->key_as_gs_b,
-                                .
-                                nonce = as_man->shared_random
-                            }
-                            ,
-                            &gs_key_trans_desc, "GS KEY"
+                                . key = as_man->key_as_gs_b,
+                                . nonce = as_man->shared_random
+                            }, &gs_key_trans_desc, "GS KEY"
     );
-
     log_warn("%p", as_man->gs_conn);
     if (trans_gsnf(as_man->gs_conn, &(gsnf_pkt_cn_t){
                        GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8, sdu
-                   }
-                   ,
-                   &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
-        )
-    ) {
+                   }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
+    )) {
         log_warn("SGW send GS key failed");
         free_buffer(sdu);
     }
@@ -318,28 +307,24 @@ static l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_m
     close_output_pbs(&lme_ss_pbs);
 
 
-#ifdef HAS_SGW
-    if (config.role == LD_SGW) {
+    if (snf_obj.role == LD_SGW) {
         CLONE_TO_CHUNK(*sdu, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs));
         trans_gsnf(as_man->gs_conn,
                    &(gsnf_pkt_cn_t){GSNF_SNF_UPLOAD,DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_F, sdu},
                    &gsnf_pkt_cn_desc, NULL,NULL);
-    } else if (config.role == LD_AS) {
-#endif
-    /* 构造具有指向性的传递结构，根据源和目的SAC指示下层向对应实体传输 */
-    orient_sdu_t *orient_sdu = create_orient_sdus(as_man->AS_SAC,
-                                                  config.role == LD_AS
-                                                      ? as_man->AS_CURR_GS_SAC
-                                                      : lme_layer_objs.GS_SAC);
-
-    /* 通过原语向SNP层传递对应报文 */
-    CLONE_TO_CHUNK(*orient_sdu->buf, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs));
-
-    preempt_prim(&SN_DATA_REQ_PRIM, SN_TYP_FROM_LME, orient_sdu, free_orient_sdus, 0, 0);
-#ifdef HAS_SGW
+    } else if (snf_obj.role == LD_AS) {
+        /* 构造具有指向性的传递结构，根据源和目的SAC指示下层向对应实体传输 */
+        // orient_sdu_t *orient_sdu = create_orient_sdus(as_man->AS_SAC,
+        //                                               config.role == LD_AS
+        //                                                   ? as_man->AS_CURR_GS_SAC
+        //                                                   : lme_layer_objs.GS_SAC);
+        //
+        // /* 通过原语向SNP层传递对应报文 */
+        // CLONE_TO_CHUNK(*orient_sdu->buf, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs));
+        //
+        // preempt_prim(&SN_DATA_REQ_PRIM, SN_TYP_FROM_LME, orient_sdu, free_orient_sdus, 0, 0);
     }
 
-#endif
 
     return LD_OK;
 }
@@ -349,7 +334,7 @@ l_err handle_recv_msg(buffer_t *buf, const snf_entity_t *as_man) {
 
     size_t handler_size = 0;
     ss_recv_handler_t *handler = NULL;
-    switch (config.role) {
+    switch (snf_obj.role) {
         case LD_AS: {
             handler_size = as_recv_handlers_sz;
             handler = as_recv_handlers;

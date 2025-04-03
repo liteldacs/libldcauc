@@ -172,11 +172,11 @@ l_err recv_gsnf(basic_conn_t **bcp) {
             switch (gsnf_pkt->G_TYP) {
                 case GSNF_SNF_UPLOAD: {
                     /* 构造具有指向性的传递结构，根据源和目的SAC指示下层向对应实体传输 */
-                    orient_sdu_t *orient_sdu = create_orient_sdus(as_man->AS_SAC, lme_layer_objs.GS_SAC);
-
-                    /* 通过原语向SNP层传递对应报文 */
-                    CLONE_TO_CHUNK(*orient_sdu->buf, gsnf_pkt->sdu->ptr, gsnf_pkt->sdu->len);
-                    preempt_prim(&SN_DATA_REQ_PRIM, SN_TYP_FROM_LME, orient_sdu, free_orient_sdus, 0, 0);
+                    // orient_sdu_t *orient_sdu = create_orient_sdus(as_man->AS_SAC, lme_layer_objs.GS_SAC);
+                    //
+                    // /* 通过原语向SNP层传递对应报文 */
+                    // CLONE_TO_CHUNK(*orient_sdu->buf, gsnf_pkt->sdu->ptr, gsnf_pkt->sdu->len);
+                    // preempt_prim(&SN_DATA_REQ_PRIM, SN_TYP_FROM_LME, orient_sdu, free_orient_sdus, 0, 0);
                     break;
                 }
                 case GSNF_SNF_DOWNLOAD: {
@@ -305,11 +305,11 @@ l_err recv_gsg(basic_conn_t **bcp) {
                 case GS_UP_UPLOAD_TRANSPORT:
                 case GS_SNF_UPLOAD: {
                     /* 构造具有指向性的传递结构，根据源和目的SAC指示下层向对应实体传输 */
-                    orient_sdu_t *orient_sdu = create_orient_sdus(as_man->AS_SAC, lme_layer_objs.GS_SAC);
-
-                    /* 通过原语向SNP层传递对应报文 */
-                    CLONE_TO_CHUNK(*orient_sdu->buf, gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
-                    preempt_prim(&SN_DATA_REQ_PRIM, SN_TYP_FROM_LME, orient_sdu, free_orient_sdus, 0, 0);
+                    // orient_sdu_t *orient_sdu = create_orient_sdus(as_man->AS_SAC, lme_layer_objs.GS_SAC);
+                    //
+                    // /* 通过原语向SNP层传递对应报文 */
+                    // CLONE_TO_CHUNK(*orient_sdu->buf, gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
+                    // preempt_prim(&SN_DATA_REQ_PRIM, SN_TYP_FROM_LME, orient_sdu, free_orient_sdus, 0, 0);
                     break;
                 }
                 case GS_SNF_DOWNLOAD: {
