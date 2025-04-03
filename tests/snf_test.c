@@ -8,14 +8,13 @@
 int main(void) {
     log_init(LOG_DEBUG, "../log", "test");
 
-    snf_args_t args = {
+    init_snf_layer(ROLE_AS);
+    int8_t ret = register_snf_en(&(snf_args_t){
+        .role = ROLE_GS,
         .AS_UA = 10086,
         .AS_SAC = 1234,
         .AS_CURR_GS_SAC = 2345
-    };
-
-    init_snf_layer(ROLE_AS);
-    int8_t ret = register_snf_en(&args);
+    });
 
     ret = unregister_snf_en(1234);
     destory_snf_layer();

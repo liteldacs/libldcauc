@@ -6,19 +6,14 @@
 #include "crypto/key.h"
 
 
-static struct hashmap *init_enode_map();
-
-static const void *set_enode(snf_entity_t *en);
-
-static int8_t delete_enode_by_sac(uint16_t as_sac, int8_t (*clear_func)(snf_entity_t *snf_en));
-
-
 snf_obj_t snf_obj = {
     .PROTOCOL_VER = PROTECT_VERSION,
+    .GS_SAC = 0xABD
 };
 
 int8_t init_snf_layer(int8_t role) {
     snf_obj.snf_emap = init_enode_map();
+    snf_obj.role = role;
     return LDCAUC_OK;
 }
 
@@ -27,9 +22,10 @@ int8_t destory_snf_layer() {
     return LDCAUC_OK;
 }
 
-static snf_entity_t *init_snf_en(uint8_t role, snf_args_t *args) {
+static snf_entity_t *init_snf_en(snf_args_t *args) {
     snf_entity_t *snf_en = calloc(1, sizeof(snf_entity_t));
 
+    uint8_t role = args->role;
     snf_en->AS_SAC = args->AS_SAC;
     snf_en->GS_UA = args->AS_CURR_GS_SAC;
     snf_en->AS_UA = args->AS_UA;
@@ -86,7 +82,7 @@ int8_t clear_snf_en(snf_entity_t *snf_en) {
 
 int8_t entry_LME_AUTH(void *args) {
     snf_args_t *snf_args = (snf_args_t *) args;
-    snf_obj.as_snf_en = init_snf_en(ROLE_AS, snf_args);
+    snf_obj.as_snf_en = init_snf_en(snf_args);
     l_err err;
 
     if ((err = change_state(&snf_obj.as_snf_en->auth_fsm, LD_AUTHC_EV_DEFAULT,
@@ -105,7 +101,7 @@ int8_t exit_LME_AUTH(void *args) {
 
 int8_t register_snf_en(snf_args_t *snf_args) {
     if (snf_args->AS_SAC >= 4096 || snf_args->AS_CURR_GS_SAC >= 4096) return LDCAUC_WRONG_PARA;
-    snf_entity_t *en = init_snf_en(ROLE_SGW, snf_args);
+    snf_entity_t *en = init_snf_en(snf_args);
     if (en == NULL) {
         return LDCAUC_NULL;
     }
@@ -124,48 +120,3 @@ static void free_snf_en(snf_entity_t *en) {
 }
 
 
-static uint64_t hash_enode(const void *item, uint64_t seed0, uint64_t seed1) {
-    const snf_entity_t *node = item;
-    return hashmap_sip(&node->AS_SAC, sizeof(uint16_t), seed0, seed1);
-}
-
-static snf_entity_t *get_enode(const uint16_t as_sac) {
-    return hashmap_get(snf_obj.snf_emap, &(snf_entity_t){
-                           .
-                           AS_SAC = as_sac,
-                       }
-    );
-}
-
-static bool has_enode(const uint16_t as_sac) {
-    return hashmap_get(snf_obj.snf_emap, &(snf_entity_t){
-                           . AS_SAC = as_sac,
-                       }
-           ) != NULL;
-}
-
-static struct hashmap *init_enode_map() {
-    return hashmap_new(sizeof(snf_entity_t), 0, 0, 0,
-                       hash_enode, NULL, NULL, NULL);
-}
-
-static const void *set_enode(snf_entity_t *en) {
-    const void *ret = hashmap_set(snf_obj.snf_emap, en);
-
-    // free_snf_entity(en);
-    free(en);
-
-    return ret;
-}
-
-static int8_t delete_enode_by_sac(uint16_t as_sac, int8_t (*clear_func)(snf_entity_t *snf_en)) {
-    snf_entity_t *en = get_enode(as_sac);
-    if (en) {
-        if (clear_func) {
-            clear_func(en);
-        }
-        hashmap_delete(snf_obj.snf_emap, en);
-        return LDCAUC_OK;
-    }
-    return LDCAUC_NULL;
-}

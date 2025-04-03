@@ -6,4 +6,8 @@
 #define SNP_SUB_H
 #include "ldcauc.h"
 
+#define MAX_SNP_SDU_LEN 2012
+#define MAX_SNP_PDU_LEN 2048
+#define SNP_RANGE 10
+
 #endif //SNP_SUB_H

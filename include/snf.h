@@ -8,10 +8,80 @@
 #include <ld_statemachine.h>
 #include <ld_buffer.h>
 #include <ld_santilizer.h>
+#include <ld_primitive.h>
 #include "ldcauc.h"
+#include "snp_sub.h"
 #include "net/gs_conn.h"
+#include "net/net_epoll.h"
 
 #define DEFAULT_GSNF_VERSION 0x01
+#define GSNF_MSG_MAX_LEN 512
+#define GTYP_LEN 4
+
+
+enum S_TYP_E {
+    AUC_RQST = 0x41,
+    AUC_RESP = 0x42,
+    AUC_KEY_EXC = 0x43,
+    KEY_UPD_RQST = 0x44,
+    KEY_UPD_RESP = 0x45,
+    G_KEY_UPD_ACK = 0x46,
+
+    FAILED_MESSAGE = 0x4F,
+
+    SN_SESSION_EST_RQST = 0xC1,
+    SN_SESSION_EST_RESP = 0xC2,
+};
+
+typedef enum {
+    GSNF_INITIAL_AS = 0xD1,
+    GSNF_SNF_UPLOAD = 0x72,
+    GSNF_SNF_DOWNLOAD = 0xD3,
+    GSNF_KEY_TRANS = 0x75,
+    GSNF_AS_AUZ_INFO = 0xB4,
+    GSNF_STATE_CHANGE = 0xEE,
+} GSNF_TYPE;
+
+typedef enum {
+    GS_SAC_RQST = 1,
+    GS_SAC_RESP,
+    GS_INITIAL_MSG,
+    GS_SNF_UPLOAD,
+    GS_SNF_DOWNLOAD,
+    GS_KEY_TRANS,
+    GS_HO_REQUEST,
+    GS_HO_REQUEST_ACK,
+    GS_HO_COMPLETE,
+    GS_UP_UPLOAD_TRANSPORT,
+    GS_UP_DOWNLOAD_TRANSPORT,
+    GS_AS_EXIT,
+} GSG_TYPE;
+
+typedef enum {
+    ELE_TYP_0 = 0x0,
+    ELE_TYP_1 = 0x1,
+    ELE_TYP_2 = 0x2,
+    ELE_TYP_3 = 0x3,
+    ELE_TYP_4 = 0x4,
+    ELE_TYP_5 = 0x5,
+    ELE_TYP_6 = 0x6,
+    ELE_TYP_7 = 0x7,
+    ELE_TYP_8 = 0x8,
+    ELE_TYP_9 = 0x9,
+    ELE_TYP_A = 0xA,
+    ELE_TYP_B = 0xB,
+    ELE_TYP_C = 0xC,
+    ELE_TYP_D = 0xD,
+    ELE_TYP_E = 0xE,
+    ELE_TYP_F = 0xF,
+} GSNF_ELE_TYPE;
+
+typedef enum {
+    GSNF_ACCESS = 0x1,
+    GSNF_SWITCH = 0x2,
+    GSNF_EXIT = 0x3,
+} GSNF_STATE;
+
 
 typedef struct snf_entity_s {
     uint32_t AS_UA;
@@ -46,38 +116,24 @@ typedef struct snf_obj_s {
     snf_entity_t *as_snf_en;
     uint8_t PROTOCOL_VER;
     int8_t role;
+    uint16_t GS_SAC;
 } snf_obj_t;
 
 extern snf_obj_t snf_obj;
 
 typedef struct snf_args_s {
+    uint8_t role;
     uint16_t AS_SAC;
     uint32_t AS_UA;
     uint16_t AS_CURR_GS_SAC;
 } snf_args_t;
 
-enum S_TYP_E {
-    AUC_RQST = 0x41,
-    AUC_RESP = 0x42,
-    AUC_KEY_EXC = 0x43,
-    KEY_UPD_RQST = 0x44,
-    KEY_UPD_RESP = 0x45,
-    G_KEY_UPD_ACK = 0x46,
+typedef struct ss_recv_handler_s {
+    uint8_t type;
 
-    FAILED_MESSAGE = 0x4F,
+    l_err (*callback)(buffer_t *, snf_entity_t *);
+} ss_recv_handler_t;
 
-    SN_SESSION_EST_RQST = 0xC1,
-    SN_SESSION_EST_RESP = 0xC2,
-};
-
-typedef enum {
-    GSNF_INITIAL_AS = 0xD1,
-    GSNF_SNF_UPLOAD = 0x72,
-    GSNF_SNF_DOWNLOAD = 0xD3,
-    GSNF_KEY_TRANS = 0x75,
-    GSNF_AS_AUZ_INFO = 0xB4,
-    GSNF_STATE_CHANGE = 0xEE,
-} GSNF_TYPE;
 
 #pragma pack(1)
 typedef struct auc_rqst_s {
@@ -249,6 +305,12 @@ extern struct_desc_t gs_sac_resp_desc;
 extern struct_desc_t gs_key_trans_desc;
 
 
+extern size_t as_recv_handlers_sz;
+extern size_t sgw_recv_handlers_sz;
+extern ss_recv_handler_t as_recv_handlers[];
+extern ss_recv_handler_t sgw_recv_handlers[];
+
+
 extern fsm_event_t ld_authc_fsm_events[];
 
 int8_t init_snf_layer(int8_t role);
@@ -275,7 +337,43 @@ l_err send_auc_key_exec(void *args);
 
 l_err finish_auc(void *args);
 
-l_err handle_recv_msg(buffer_t *buf, const lme_as_man_t *as_man);
+l_err recv_auc_resp(buffer_t *buf, snf_entity_t *as_man);
+
+l_err recv_auc_key_exec(buffer_t *buf, snf_entity_t *as_man);
+
+l_err recv_auc_rqst(buffer_t *buf, snf_entity_t *as_man);
+
+l_err recv_key_update_rqst(buffer_t *buf, snf_entity_t *as_man);
+
+l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man);
+
+l_err recv_sn_session_est_rqst(buffer_t *buf, snf_entity_t *as_man);
+
+l_err handle_recv_msg(buffer_t *buf, const snf_entity_t *as_man);
+
+/* gsnf */
+
+
+l_err trans_gsnf(gs_tcp_propt_t *conn, void *pkg, struct_desc_t *desc, l_err (*mid_func)(buffer_t *, void *),
+                 void *args);
+
+l_err recv_gsnf(basic_conn_t **bcp);
+
+l_err recv_gsg(basic_conn_t **bcp);
+
+/* define */
+
+struct hashmap *init_enode_map();
+
+bool has_enode_by_sac(const uint16_t as_sac);
+
+bool has_enode_by_ua(uint32_t target_UA);
+
+snf_entity_t *get_enode(const uint16_t as_sac);
+
+const void *set_enode(snf_entity_t *en);
+
+int8_t delete_enode_by_sac(uint16_t as_sac, int8_t (*clear_func)(snf_entity_t *snf_en));
 
 
 #endif //SNF_H

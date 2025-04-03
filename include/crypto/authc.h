@@ -10,6 +10,7 @@
 
 #define AUTHC_ALG_S_LEN 4
 #define AUTHC_KLEN_LEN 2
+#define SHAREDINFO_LEN 21
 
 extern struct sm_state_s ld_authc_states[];
 

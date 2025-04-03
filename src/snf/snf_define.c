@@ -235,3 +235,78 @@ static field_desc gs_key_trans_fields[] = {
 };
 
 struct_desc_t gs_key_trans_desc = {"KEY_TRANS_DESC", gs_key_trans_fields};
+
+
+size_t as_recv_handlers_sz = 3;
+ss_recv_handler_t as_recv_handlers[] = {
+    {AUC_RESP, recv_auc_resp},
+    {KEY_UPD_RQST, recv_key_update_rqst},
+    {SN_SESSION_EST_RQST, recv_sn_session_est_rqst},
+};
+
+size_t sgw_recv_handlers_sz = 3;
+ss_recv_handler_t sgw_recv_handlers[] = {
+    {AUC_RQST, recv_auc_rqst},
+    {AUC_KEY_EXC, recv_auc_key_exec},
+    {KEY_UPD_RESP, recv_key_update_resp},
+};
+
+uint64_t hash_enode(const void *item, uint64_t seed0, uint64_t seed1) {
+    const snf_entity_t *node = item;
+    return hashmap_sip(&node->AS_SAC, sizeof(uint16_t), seed0, seed1);
+}
+
+snf_entity_t *get_enode(const uint16_t as_sac) {
+    return hashmap_get(snf_obj.snf_emap, &(snf_entity_t){
+                           .
+                           AS_SAC = as_sac,
+                       }
+    );
+}
+
+bool has_enode_by_sac(const uint16_t as_sac) {
+    return hashmap_get(snf_obj.snf_emap, &(snf_entity_t){
+                           . AS_SAC = as_sac,
+                       }
+           ) != NULL;
+}
+
+bool has_enode_by_ua(uint32_t target_UA) {
+    size_t iter = 0;
+    void *item;
+    while (hashmap_iter(snf_obj.snf_emap, &iter, &item)) {
+        const snf_entity_t *as_man = item;
+        if (as_man->AS_UA == target_UA)
+            return TRUE;
+    }
+    return FALSE;
+}
+
+struct hashmap *init_enode_map() {
+    return hashmap_new(sizeof(snf_entity_t), 0, 0, 0,
+                       hash_enode, NULL, NULL, NULL);
+}
+
+const void *set_enode(snf_entity_t *en) {
+    if (!en) return NULL;
+
+    const void *ret = hashmap_set(snf_obj.snf_emap, en);
+
+    // free_snf_entity(en);
+    free(en);
+
+    return ret;
+}
+
+int8_t delete_enode_by_sac(uint16_t as_sac, int8_t (*clear_func)(snf_entity_t *snf_en)) {
+    snf_entity_t *en = get_enode(as_sac);
+    if (en) {
+        if (clear_func) {
+            clear_func(en);
+        }
+        hashmap_delete(snf_obj.snf_emap, en);
+        return LDCAUC_OK;
+    }
+    return LDCAUC_NULL;
+}
+
