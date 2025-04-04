@@ -118,6 +118,8 @@ typedef struct snf_obj_s {
     uint8_t PROTOCOL_VER;
     ldacs_roles role;
     uint16_t GS_SAC;
+
+    net_opt_t net_opt;
 } snf_obj_t;
 
 extern snf_obj_t snf_obj;

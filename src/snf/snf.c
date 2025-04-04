@@ -8,7 +8,9 @@
 
 snf_obj_t snf_obj = {
     .PROTOCOL_VER = PROTECT_VERSION,
-    .GS_SAC = 0xABD
+    .GS_SAC = 0xABD,
+    .net_opt = {
+    },
 };
 
 int8_t init_snf_layer(int8_t role) {

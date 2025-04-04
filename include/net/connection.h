@@ -16,7 +16,6 @@ extern heap_desc_t hd_conns;
 
 typedef struct basic_conn_s {
     int fd; /* connection_s fd */
-    int server_fd;
     struct epoll_event event; /* epoll event */
     struct sockaddr_storage saddr; /* IP socket address */
     buffer_t read_pkt; /* Receive packet */
@@ -29,9 +28,9 @@ typedef struct basic_conn_s {
 
 typedef struct net_opt_s {
     char name[32];
-
     int server_fd; //for GSW
-
+    char addr[16];
+    int port;
     int timeout;
 
     void (*close_handler)(basic_conn_t **);

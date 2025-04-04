@@ -217,8 +217,8 @@ static int make_std_tcp_accept(basic_conn_t *bc) {
     struct sockaddr_in *to_conn_addr = (struct sockaddr_in *) &bc->saddr;
     int fd;
     socklen_t saddrlen = sizeof(struct sockaddr_in);
-    if (bc->server_fd == DEFAULT_FD) return DEFAULT_FD;
-    while ((fd = accept(bc->server_fd, (struct sockaddr *) to_conn_addr, &saddrlen)) == ERROR);
+    if (bc->opt->server_fd == DEFAULT_FD) return DEFAULT_FD;
+    while ((fd = accept(bc->opt->server_fd, (struct sockaddr *) to_conn_addr, &saddrlen)) == ERROR);
     // fprintf(stderr, "%d\n", fd);
     return fd;
 }
@@ -227,8 +227,8 @@ static int make_std_tcpv6_accept(basic_conn_t *bc) {
     struct sockaddr_in6 *to_conn_addr = (struct sockaddr_in6 *) &bc->saddr;
     int fd;
     socklen_t saddrlen = sizeof(struct sockaddr_in6);
-    if (bc->server_fd == DEFAULT_FD) return DEFAULT_FD;
-    while ((fd = accept(bc->server_fd, (struct sockaddr *) to_conn_addr, &saddrlen)) == ERROR) {
+    if (bc->opt->server_fd == DEFAULT_FD) return DEFAULT_FD;
+    while ((fd = accept(bc->opt->server_fd, (struct sockaddr *) to_conn_addr, &saddrlen)) == ERROR) {
         if (errno != EINTR) {
             // 如果不是由信号中断，则报告错误并退出
             perror("accept");
@@ -263,7 +263,7 @@ static int add_listen_fd(int server_fd) {
 
 static int init_std_tcp_conn_handler(basic_conn_t *bc) {
     // return make_std_tcp_connect((struct sockaddr_in *) &bc->saddr, config.gsnf_addr, config.gsnf_port);
-    return make_std_tcpv6_connect((struct sockaddr_in6 *) &bc->saddr, config.gsnf_addr_v6, config.gsnf_port);
+    return make_std_tcpv6_connect((struct sockaddr_in6 *) &bc->saddr, bc->opt->addr, bc->opt->port);
 }
 
 static int init_std_tcp_accept_handler(basic_conn_t *bc) {

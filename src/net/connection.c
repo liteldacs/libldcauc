@@ -85,7 +85,6 @@ bool init_basic_conn(void *conn_opt, const net_opt_t *opt, int role) {
 
     do {
         bc->fd = 0;
-        bc->server_fd = opt->server_fd;
         bc->opt = opt;
         bc->rp = get_role_propt(role);
         bc->fd = bc->rp->init_handler(bc);
@@ -141,8 +140,6 @@ void server_connection_prune(int timeout) {
         int64_t active_time = hd_conns.hps[0]->factor;
         if (time(NULL) - active_time >= timeout) {
             log_info("prune %p %d\n", *bcp, hd_conns.heap_size);
-            //connection_close(bcp);
-            // (*bcp)->opt->close_conn(bcp);
             connection_close(bcp);
         } else
             break;
