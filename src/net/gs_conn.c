@@ -68,7 +68,7 @@ void *gs_epoll_setup(void *args) {
                 int status;
                 assert(bcp != NULL);
 
-                if (connecion_is_expired(bcp))
+                if (connecion_is_expired(bcp, net_opt->timeout))
                     continue;
 
                 if (curr_event->events & EPOLLIN) {
@@ -87,7 +87,7 @@ void *gs_epoll_setup(void *args) {
                 }
             }
         }
-        server_connection_prune();
+        server_connection_prune(net_opt->timeout);
     }
     close(epoll_fd);
     server_shutdown(net_opt->server_fd);

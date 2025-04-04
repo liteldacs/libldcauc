@@ -15,10 +15,10 @@ static inline void connection_set_nodelay(basic_conn_t *bc) {
 }
 
 
-inline bool connecion_is_expired(basic_conn_t **bcp) {
+inline bool connecion_is_expired(basic_conn_t **bcp, int timeout) {
     heap_t *conn_hp = get_heap(&hd_conns, bcp);
     int64_t active_time = conn_hp->factor;
-    return config.timeout ? (time(NULL) - active_time > config.timeout) : FALSE;
+    return timeout ? (time(NULL) - active_time > timeout) : FALSE;
 }
 
 void connecion_set_reactivated(basic_conn_t **bcp) {
@@ -135,11 +135,11 @@ void connection_close(basic_conn_t **bcp) {
     free(bcp);
 }
 
-void server_connection_prune() {
-    while (hd_conns.heap_size > 0 && config.timeout) {
+void server_connection_prune(int timeout) {
+    while (hd_conns.heap_size > 0 && timeout) {
         basic_conn_t **bcp = hd_conns.hps[0]->obj;
         int64_t active_time = hd_conns.hps[0]->factor;
-        if (time(NULL) - active_time >= config.timeout) {
+        if (time(NULL) - active_time >= timeout) {
             log_info("prune %p %d\n", *bcp, hd_conns.heap_size);
             //connection_close(bcp);
             // (*bcp)->opt->close_conn(bcp);

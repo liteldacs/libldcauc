@@ -15,13 +15,13 @@ struct role_propt {
 
     int (*server_make)(uint16_t port);
 
-    int (*init_handler)(basic_conn_t *);
+    int (*init_handler)(basic_conn_t *, void *);
 };
 
 
 const struct role_propt *get_role_propt(int role);
 
-int server_entity_setup();
+int server_entity_setup(ldacs_roles role, int16_t port);
 
 // extern int client_shutdown();
 

@@ -160,10 +160,10 @@ static int make_std_tcp_server(uint16_t port) {
 
     int enable = SO_REUSEADDR;
     setsockopt(n_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
-    if (config.worker > 1) {
-        // since linux 3.9
-        setsockopt(n_fd, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(enable));
-    }
+    // if (config.worker > 1) {
+    //     // since linux 3.9
+    //     setsockopt(n_fd, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(enable));
+    // }
 
     zero(&saddr);
     saddr.sin_family = AF_INET;
@@ -189,10 +189,10 @@ static int make_std_tcpv6_server(uint16_t port) {
 
     setsockopt(n_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
 
-    if (config.worker > 1) {
-        // since linux 3.9
-        setsockopt(n_fd, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(enable));
-    }
+    // if (config.worker > 1) {
+    //     // since linux 3.9
+    //     setsockopt(n_fd, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(enable));
+    // }
 
     // Allow both IPv6 and IPv4 connections on this socket.
     // If you want to restrict it to IPv6 only, set this option to 1.
@@ -261,13 +261,11 @@ static int add_listen_fd(int server_fd) {
 //     return make_gs_as_connect((struct sockaddr_in *) &bc->saddr);
 // }
 
-static int init_std_tcp_conn_handler(basic_conn_t *bc) {
-    // return make_std_tcp_connect((struct sockaddr_in *) &bc->saddr, config.gsnf_addr, config.gsnf_port);
+static int init_std_tcp_conn_handler(basic_conn_t *bc, void *args) {
     return make_std_tcpv6_connect((struct sockaddr_in6 *) &bc->saddr, config.gsnf_addr_v6, config.gsnf_port);
 }
 
-static int init_std_tcp_accept_handler(basic_conn_t *bc) {
-    // return make_std_tcpv6_accept((struct sockaddr_in6 *) &bc->saddr);
+static int init_std_tcp_accept_handler(basic_conn_t *bc, void *args) {
     return make_std_tcp_accept(bc);
 }
 
@@ -289,10 +287,10 @@ const struct role_propt *get_role_propt(int role) {
 }
 
 
-int server_entity_setup() {
-    const struct role_propt *rp = get_role_propt(config.role);
+int server_entity_setup(ldacs_roles role, int16_t port) {
+    const struct role_propt *rp = get_role_propt(role);
 
-    int server_fd = rp->server_make(config.port);
+    int server_fd = rp->server_make(port);
 
     ABORT_ON(server_fd == ERROR, "make_server");
     ABORT_ON((epoll_fd = core_epoll_create(0, epoll_fd)) == ERROR, "core_epoll_create");
