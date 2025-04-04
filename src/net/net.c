@@ -2,7 +2,6 @@
 // Created by jiaxv on 23-7-9.
 //
 #include <netinet/tcp.h>
-#include <ld_config.h>
 
 #include "net/net_core.h"
 

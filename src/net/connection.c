@@ -5,7 +5,6 @@
 #include <netdb.h>
 
 #include "net/net_core.h"
-#include <ld_config.h>
 #include <netinet/tcp.h>
 
 heap_desc_t hd_conns;

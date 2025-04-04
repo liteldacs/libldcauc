@@ -4,10 +4,10 @@
 
 #ifndef TEST_CLIENT_CLIENT_H
 #define TEST_CLIENT_CLIENT_H
-#include  "ld_config.h"
 
 #define IPV6_ADDRLEN 128
 # define DEFAULT_FD -1
+
 
 struct role_propt {
     ldacs_roles l_r;
