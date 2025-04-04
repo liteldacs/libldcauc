@@ -6,9 +6,10 @@
 #include "crypto/secure_core.h"
 #include "crypto/cipher.h"
 #include "crypto/authc.h"
+#include "crypto/key.h"
+#include "net/net.h"
 #include <ld_santilizer.h>
 
-static l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_man, KEY_HANDLE key_med);
 
 /**
  * 生成认证过程第一条报文AUC_RQST
@@ -284,13 +285,138 @@ l_err finish_auc(void *args) {
     return LD_OK;
 }
 
+l_err send_key_update_rqst(void *args) {
+    snf_entity_t *as_man = args;
+
+    /* 生成随机数NONCE */
+    buffer_t *nonce = init_buffer_ptr(32);
+    uint8_t NONCE_str[NONCE_LEN] = {0};
+    generate_nrand(NONCE_str, NONCE_LEN);
+    CLONE_TO_CHUNK(*nonce, NONCE_str, NONCE_LEN);
+
+    key_upd_rqst_t *key_upd_rqst = &(key_upd_rqst_t){
+        .S_TYP = KEY_UPD_RQST,
+        .VER = snf_obj.PROTOCOL_VER,
+        .PID = PID_MAC,
+        .AS_SAC = as_man->AS_SAC,
+        .KEY_TYPE = MASTER_KEY_AS_SGW,
+        .SAC_src = as_man->AS_CURR_GS_SAC,
+        .SAC_dst = as_man->AS_CURR_GS_SAC, /* 假设GS没变 */
+        .NCC = 10086,
+        .NONCE = nonce,
+    };
+
+    handle_send_msg(key_upd_rqst, &key_upd_rqst_desc, as_man, as_man->key_as_sgw_s_h);
+
+    free_buffer(nonce);
+    return LD_OK;
+}
+
+l_err recv_key_update_rqst(buffer_t *buf, snf_entity_t *as_man) {
+    key_upd_rqst_t key_upd_rqst;
+    pb_stream pbs;
+    zero(&pbs);
+    init_pbs(&pbs, buf->ptr, buf->len, "IN MSG");
+
+    in_struct(&key_upd_rqst, &key_upd_rqst_desc, &pbs, NULL);
+    if (!pb_in_mac(&pbs, get_sec_maclen(as_man->AUTHC_MACLEN), as_man->key_as_sgw_s_h, verify_hmac_uint)) {
+        return LD_ERR_INVALID_MAC;
+    }
+
+    // log_warn("NEW GS: %d %d %d", key_upd_rqst.AS_SAC, key_upd_rqst.SAC_src, key_upd_rqst.SAC_dst);
+
+    UA_STR(ua_as);
+    UA_STR(ua_gs_src);
+    UA_STR(ua_gs_dst);
+    UA_STR(ua_sgw);
+    get_ua_str(10010, ua_as);
+    get_ua_str(10086, ua_gs_src);
+    get_ua_str(10087, ua_gs_dst);
+    get_ua_str(10000, ua_sgw);
+    as_update_mkey(ua_sgw, ua_gs_src, ua_gs_dst, ua_as, key_upd_rqst.NONCE, &as_man->key_as_gs_h);
+
+    send_key_update_resp(as_man);
+    return LD_OK;
+}
+
+
+l_err send_key_update_resp(void *args) {
+    snf_entity_t *as_man = args;
+    key_upd_resp_t key_upd_resp = {
+        .S_TYP = KEY_UPD_RESP,
+        .VER = snf_obj.PROTOCOL_VER,
+        .PID = PID_MAC,
+        .AS_SAC = as_man->AS_SAC,
+        .KEY_TYPE = MASTER_KEY_AS_SGW,
+        .SAC_dst = as_man->AS_CURR_GS_SAC,
+        .NCC = 10086,
+    };
+    handle_send_msg(&key_upd_resp, &key_upd_resp_desc, as_man, as_man->key_as_sgw_s_h);
+    return LD_OK;
+}
+
+l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man) {
+    key_upd_resp_t key_upd_resp;
+    pb_stream pbs;
+    zero(&pbs);
+    init_pbs(&pbs, buf->ptr, buf->len, "IN MSG");
+
+    in_struct(&key_upd_resp, &key_upd_resp_desc, &pbs, NULL);
+    if (!pb_in_mac(&pbs, get_sec_maclen(as_man->AUTHC_MACLEN), as_man->key_as_sgw_s_h, verify_hmac_uint)) {
+        return LD_ERR_INVALID_MAC;
+    }
+
+    return LD_OK;
+}
+
+
+l_err send_sn_session_est_resp(void *args) {
+    snf_entity_t *as_man = args;
+    sn_session_est_resp_t est_resp = {
+        .SN_TYP = SN_SESSION_EST_RESP,
+        .VER = DEFAULT_GSNF_VERSION,
+        .PID = 1, //???
+        .AS_SAC = as_man->AS_SAC,
+        .IP_AS = init_buffer_unptr()
+    };
+
+    char ipv6_bin[16] = {0};
+
+    // Convert IPv6 string to binary
+    if (inet_pton(AF_INET6, config.gsnf_addr_v6, ipv6_bin) != 1) {
+        log_error("inet_pton");
+        return LD_ERR_INTERNAL;
+    }
+
+    CLONE_TO_CHUNK(*est_resp.IP_AS, ipv6_bin, IPV6_ADDRLEN >> 3);
+
+    handle_send_msg(&est_resp, &sn_session_est_resp_desc, as_man, NULL);
+
+    free_buffer(est_resp.IP_AS);
+    return LD_OK;
+}
+
+l_err recv_sn_session_est_rqst(buffer_t *buf, snf_entity_t *as_man) {
+    sn_session_est_rqst_t est_rqst;
+    pb_stream pbs;
+    zero(&pbs);
+    init_pbs(&pbs, buf->ptr, buf->len, "IN MSG");
+
+    in_struct(&est_rqst, &sn_session_est_rqst_desc, &pbs, NULL);
+
+    // log_error("%d %d", est_rqst.SER_TYPE, est_rqst.AS_SAC);
+    send_sn_session_est_resp(as_man);
+
+    return LD_OK;
+}
+
 /**
  * 向SNP层传送子网控制报文
  * @param args 待组装结构体
  * @param desc 对应结构体描述，用以组装报文
  * @param as_man 相关AS实体
  */
-static l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_man, KEY_HANDLE key_med) {
+l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_man, KEY_HANDLE key_med) {
     pb_stream lme_ss_pbs;
     zero(&lme_ss_pbs);
     uint8_t ss_buf[MAX_SNP_SDU_LEN] = {0};

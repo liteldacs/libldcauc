@@ -32,6 +32,8 @@ typedef struct net_opt_s {
 
     int server_fd; //for GSW
 
+    int timeout;
+
     void (*close_handler)(basic_conn_t **);
 
     bool (*reset_conn)(basic_conn_t **);
@@ -44,7 +46,7 @@ typedef struct net_opt_s {
 
 bool init_basic_conn(void *conn_opt, const net_opt_t *opt, int role);
 
-extern bool connecion_is_expired(basic_conn_t **bcp);
+bool connecion_is_expired(basic_conn_t **bcp, int timeout);
 
 void connection_close(basic_conn_t **bcp);
 
@@ -52,7 +54,7 @@ void connecion_set_reactivated(basic_conn_t **bdp);
 
 void connecion_set_expired(basic_conn_t **bcp);
 
-void server_connection_prune();
+void server_connection_prune(int timeout);
 
 
 #endif //TEST_CLIENT_CONNECTION_H

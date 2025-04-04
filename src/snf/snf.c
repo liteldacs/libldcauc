@@ -107,6 +107,8 @@ int8_t register_snf_en(snf_args_t *snf_args) {
     }
     set_enode(en);
 
+    // TODO: DLS OPEN CALLBACK
+
     return LDCAUC_OK;
 }
 

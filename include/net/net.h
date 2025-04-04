@@ -4,7 +4,6 @@
 
 #ifndef TEST_CLIENT_CLIENT_H
 #define TEST_CLIENT_CLIENT_H
-#include  "ld_config.h"
 
 #define IPV6_ADDRLEN 128
 # define DEFAULT_FD -1
@@ -21,11 +20,10 @@ struct role_propt {
 
 const struct role_propt *get_role_propt(int role);
 
-int server_entity_setup();
+int server_entity_setup(ldacs_roles role, uint16_t port);
 
-// extern int client_shutdown();
 
-extern int server_shutdown();
+int server_shutdown(int server_fd);
 
 
 int write_packet(basic_conn_t *bc);
