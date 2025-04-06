@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/LdcaucTargets.cmake")
+
+# 提供旧式变量（兼容 find_package 传统用法）
+set(Ldcauc_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include/utils")
+set(Ldcauc_LIBRARIES "@CMAKE_INSTALL_PREFIX@/lib")
