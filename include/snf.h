@@ -348,6 +348,8 @@ l_err finish_auc(void *args);
 
 l_err send_key_update_rqst(void *args);
 
+l_err send_key_update_rqst(void *args);
+
 l_err recv_key_update_rqst(buffer_t *buf, snf_entity_t *as_man);
 
 l_err send_key_update_resp(void *args);

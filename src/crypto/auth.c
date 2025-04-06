@@ -122,6 +122,23 @@ const char *ld_authc_fsm_states[] = {
     "LD_AUTHC_G1",
     "LD_AUTHC_G2",
 };
+const char *s_type_name[] = {
+    "AUC_RQST",
+    "AUC_RESP",
+    "AUC_KEY_EXC",
+    "KEY_UPD_RQST",
+    "KEY_UPD_RESP",
+    "G_KEY_UPD_ACK",
+
+    "SN_SESSION_EST_RQST",
+    "SN_SESSION_EST_RESP",
+};
+const char *pid_name[] = {
+    "PID_RESERVED",
+    "PID_SIGN",
+    "PID_MAC",
+    "PID_BOTH",
+};
 
 const char *s_type_name[] = {
     "AUC_RQST",
