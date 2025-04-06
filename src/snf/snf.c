@@ -8,7 +8,7 @@
 
 snf_obj_t snf_obj = {
     .PROTOCOL_VER = PROTECT_VERSION,
-    .GS_SAC = 0xABD,
+    // .GS_SAC = 0xABD,
     .net_opt = {
     },
     .is_merged = TRUE

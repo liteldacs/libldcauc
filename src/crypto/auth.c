@@ -140,24 +140,6 @@ const char *pid_name[] = {
     "PID_BOTH",
 };
 
-const char *s_type_name[] = {
-    "AUC_RQST",
-    "AUC_RESP",
-    "AUC_KEY_EXC",
-    "KEY_UPD_RQST",
-    "KEY_UPD_RESP",
-    "G_KEY_UPD_ACK",
-
-    "SN_SESSION_EST_RQST",
-    "SN_SESSION_EST_RESP",
-};
-
-const char *pid_name[] = {
-    "PID_RESERVED",
-    "PID_SIGN",
-    "PID_MAC",
-    "PID_BOTH",
-};
 
 
 static enum_names authc_maclen_names = {AUTHC_MACLEN_INVALID, AUTHC_MACLEN_256, authc_maclen_name, NULL};
