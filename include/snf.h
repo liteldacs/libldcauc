@@ -83,6 +83,10 @@ typedef enum {
     GSNF_EXIT = 0x3,
 } GSNF_STATE;
 
+typedef int8_t (*finish_auth_fsm)();
+
+typedef int8_t (*dls_open)();
+
 
 typedef struct snf_entity_s {
     uint32_t AS_UA;
@@ -120,6 +124,8 @@ typedef struct snf_obj_s {
     uint16_t GS_SAC;
 
     net_opt_t net_opt;
+
+    bool is_merged;
 } snf_obj_t;
 
 extern snf_obj_t snf_obj;
@@ -316,7 +322,7 @@ extern ss_recv_handler_t sgw_recv_handlers[];
 
 extern fsm_event_t ld_authc_fsm_events[];
 
-int8_t init_snf_layer(int8_t role);
+int8_t init_as_snf_layer(void);
 
 int8_t clear_snf_en(snf_entity_t *snf_en);
 

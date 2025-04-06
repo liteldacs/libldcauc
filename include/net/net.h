@@ -4,8 +4,8 @@
 
 #ifndef TEST_CLIENT_CLIENT_H
 #define TEST_CLIENT_CLIENT_H
+#include <ldacs_sim.h>
 
-#define IPV6_ADDRLEN 128
 # define DEFAULT_FD -1
 
 struct role_propt {

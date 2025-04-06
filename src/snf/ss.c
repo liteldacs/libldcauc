@@ -7,7 +7,7 @@
 #include "crypto/cipher.h"
 #include "crypto/authc.h"
 #include "crypto/key.h"
-#include "net/net.h"
+#include "net/net_core.h"
 #include <ld_santilizer.h>
 
 

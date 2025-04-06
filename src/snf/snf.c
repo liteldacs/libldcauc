@@ -11,11 +11,33 @@ snf_obj_t snf_obj = {
     .GS_SAC = 0xABD,
     .net_opt = {
     },
+    .is_merged = TRUE
 };
 
-int8_t init_snf_layer(int8_t role) {
+int8_t init_as_snf_layer() {
     snf_obj.snf_emap = init_enode_map();
-    snf_obj.role = role;
+    snf_obj.role = LD_AS;
+    return LDCAUC_OK;
+}
+
+int8_t init_gs_snf_layer(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_port) {
+    snf_obj.snf_emap = init_enode_map();
+    snf_obj.role = LD_GS;
+    snf_obj.GS_SAC = GS_SAC;
+
+    memcpy(snf_obj.net_opt.addr, gsnf_addr, GEN_ADDRLEN);
+    snf_obj.net_opt.port = gsnf_port;
+
+    snf_obj.is_merged = TRUE;
+
+    return LDCAUC_OK;
+}
+
+int8_t init_gs_snf_layer_unmerged(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_port) {
+    init_gs_snf_layer(GS_SAC, gsnf_addr, gsnf_port);
+
+    snf_obj.is_merged = FALSE;
+
     return LDCAUC_OK;
 }
 

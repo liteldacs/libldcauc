@@ -10,7 +10,7 @@
 #include <ld_epoll.h>
 #include <passert.h>
 #include <ld_mqueue.h>
-#include "net/connection.h"
+#include "net/net_core.h"
 
 extern heap_desc_t hd_conns;
 
@@ -29,7 +29,7 @@ typedef struct basic_conn_s {
 typedef struct net_opt_s {
     char name[32];
     int server_fd; //for GSW
-    char addr[16];
+    char addr[GEN_ADDRLEN];
     int port;
     int timeout;
 

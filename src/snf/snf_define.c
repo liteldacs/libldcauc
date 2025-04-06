@@ -4,7 +4,7 @@
 
 #include "snf.h"
 #include "crypto/authc.h"
-#include "net/net.h"
+#include "net/net_core.h"
 
 fsm_event_t ld_authc_fsm_events[] = {
     {"LD_AUTHC_A0", NULL, NULL},
@@ -127,7 +127,7 @@ static field_desc sn_session_est_resp_fields[] = {
     {ft_pad, 0, "PAD", NULL},
     {ft_set, 12, "SAC", NULL},
     {ft_pad, 0, "PAD", NULL},
-    {ft_fl_str, 0, "IP", &(pk_fix_length_t){.len = IPV6_ADDRLEN >> 3}},
+    {ft_fl_str, 0, "IP", &(pk_fix_length_t){.len = GEN_ADDRLEN}},
     {ft_pad, 0, "PAD", NULL},
     {ft_end, 0, NULL, NULL},
 };

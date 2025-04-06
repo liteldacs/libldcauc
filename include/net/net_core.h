@@ -5,8 +5,9 @@
 #ifndef TEST_CLIENT_CLIENT_CORE_H
 #define TEST_CLIENT_CLIENT_CORE_H
 
-#include <ldacs_sim.h>
 
+#define IPV6_ADDRLEN 128
+#define GEN_ADDRLEN 128 >> 3
 typedef struct basic_conn_s basic_conn_t;
 
 #include "net.h"

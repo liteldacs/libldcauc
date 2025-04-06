@@ -8,7 +8,7 @@
 int main(void) {
     log_init(LOG_DEBUG, "../log", "test");
 
-    init_snf_layer(ROLE_AS);
+    init_as_snf_layer();
     int8_t ret = register_snf_en(&(snf_args_t){
         .role = ROLE_GS,
         .AS_UA = 10086,
