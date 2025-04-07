@@ -10,4 +10,6 @@
 #define MAX_SNP_PDU_LEN 2048
 #define SNP_RANGE 10
 
+int test();
+
 #endif //SNP_SUB_H

@@ -125,6 +125,8 @@ typedef struct snf_obj_s {
 
     net_opt_t net_opt;
 
+    gs_tcp_propt_t *sgw_conn; // GS -> SGW
+
     bool is_merged;
 } snf_obj_t;
 
@@ -323,6 +325,10 @@ extern ss_recv_handler_t sgw_recv_handlers[];
 extern fsm_event_t ld_authc_fsm_events[];
 
 int8_t init_as_snf_layer(void);
+
+int8_t init_gs_snf_layer(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_port);
+
+int8_t init_gs_snf_layer_unmerged(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_port);
 
 int8_t clear_snf_en(snf_entity_t *snf_en);
 

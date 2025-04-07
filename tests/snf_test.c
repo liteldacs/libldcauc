@@ -19,3 +19,7 @@ int main(void) {
     ret = unregister_snf_en(1234);
     destory_snf_layer();
 }
+
+int test() {
+    log_warn("!!!!!!!!!!!!1");
+}

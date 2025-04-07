@@ -28,6 +28,8 @@ int8_t init_gs_snf_layer(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_port) {
     memcpy(snf_obj.net_opt.addr, gsnf_addr, GEN_ADDRLEN);
     snf_obj.net_opt.port = gsnf_port;
 
+    snf_obj.sgw_conn = init_gs_conn(LD_GS, &snf_obj.net_opt);
+
     snf_obj.is_merged = TRUE;
 
     return LDCAUC_OK;
