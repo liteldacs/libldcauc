@@ -32,6 +32,7 @@ static char *get_table_name(ldacs_roles role) {
 
 
 #include <gmssl/pbkdf2.h>
+
 #define KDF_ITER 10000
 #ifdef USE_CRYCARD
 /* for AS / SGW */
@@ -99,8 +100,9 @@ static l_km_err key_install(buffer_t *key_ag, const char *as_ua, const char *gs_
 }
 
 #elif UNUSE_CRYCARD
+
 /** generate key by sm3 kdf, using gmssl lib */
-static l_err gmssl_kdf(uint8_t *rand, size_t rand_len, KEY_HANDLE *handle, size_t key_sz) {
+static l_km_err gmssl_kdf(uint8_t *rand, size_t rand_len, KEY_HANDLE*handle, size_t key_sz) {
     *handle = init_buffer_unptr();
     buffer_t *key_buf = *handle;
     // SM3_KDF_CTX kdf_ctx;
@@ -111,8 +113,9 @@ static l_err gmssl_kdf(uint8_t *rand, size_t rand_len, KEY_HANDLE *handle, size_
 
     CLONE_TO_CHUNK(*key_buf, kdf_str, key_sz);
 
-    return LD_OK;
+    return LD_KM_OK;
 }
+
 #endif
 
 
@@ -166,8 +169,8 @@ l_km_err embed_rootkey(ldacs_roles role, const char *as_ua, const char *sgw_ua) 
 }
 
 l_km_err as_derive_keys(uint8_t *rand, uint32_t randlen, const char *as_ua,
-                        const char *gs_ua, const char *sgw_flag, KEY_HANDLE *key_aw, KEY_HANDLE *key_ag) {
-    l_km_err err = LD_OK;
+                        const char *gs_ua, const char *sgw_flag, KEY_HANDLE*key_aw, KEY_HANDLE*key_ag) {
+    l_km_err err = LD_KM_OK;
 
 #ifdef USE_CRYCARD
     if ((err = key_derive_as_sgw(LD_AS, rand, randlen, as_ua, gs_ua, sgw_flag, key_aw)) != LD_KM_OK) {
@@ -188,7 +191,7 @@ l_km_err as_derive_keys(uint8_t *rand, uint32_t randlen, const char *as_ua,
 }
 
 l_km_err gs_install_keys(buffer_t *ag_raw, uint8_t *rand, uint32_t randlen, const char *as_ua,
-                         const char *gs_ua, KEY_HANDLE *key_ag) {
+                         const char *gs_ua, KEY_HANDLE*key_ag) {
     l_km_err err = LD_KM_OK;
 #ifdef USE_CRYCARD
 
@@ -208,7 +211,7 @@ l_km_err gs_install_keys(buffer_t *ag_raw, uint8_t *rand, uint32_t randlen, cons
 }
 
 l_km_err sgw_derive_keys(uint8_t *rand, uint32_t randlen, const char *as_ua,
-                         const char *gs_ua, const char *sgw_ua, KEY_HANDLE *key_aw, buffer_t **kbuf) {
+                         const char *gs_ua, const char *sgw_ua, KEY_HANDLE*key_aw, buffer_t **kbuf) {
     l_km_err err = LD_KM_OK;
 #ifdef USE_CRYCARD
 
@@ -240,7 +243,7 @@ l_km_err sgw_derive_keys(uint8_t *rand, uint32_t randlen, const char *as_ua,
 
 
 l_km_err key_get_handle(ldacs_roles role, const char *owner1, const char *owner2, enum KEY_TYPE key_type,
-                        KEY_HANDLE *handle) {
+                        KEY_HANDLE*handle) {
 #ifdef USE_CRYCARD
     const char *db_name = get_db_name(role);
     const char *table_name = get_table_name(role);

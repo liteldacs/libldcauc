@@ -44,9 +44,7 @@ typedef enum {
 } GSNF_TYPE;
 
 typedef enum {
-    GS_SAC_RQST = 1,
-    GS_SAC_RESP,
-    GS_INITIAL_MSG,
+    GS_INITIAL_MSG = 1,
     GS_SNF_UPLOAD,
     GS_SNF_DOWNLOAD,
     GS_KEY_TRANS,
@@ -83,14 +81,14 @@ typedef enum {
     GSNF_EXIT = 0x3,
 } GSNF_STATE;
 
-typedef int8_t (*finish_auth_fsm)();
+typedef int8_t (*finish_auth)();
 
-typedef int8_t (*dls_open)();
+typedef int8_t (*trans_snp)(uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *buf, size_t buf_len);
 
 
 typedef struct snf_entity_s {
     uint32_t AS_UA;
-    uint32_t GS_UA;
+    uint32_t SGW_UA;
     uint16_t AS_SAC;
     uint16_t AS_CURR_GS_SAC; /* current connected/to connect GS SAC for AS */
 
@@ -122,9 +120,15 @@ typedef struct snf_obj_s {
     uint8_t PROTOCOL_VER;
     ldacs_roles role;
     uint16_t GS_SAC;
-
     net_opt_t net_opt;
 
+    trans_snp trans_snp_func;
+
+    //AS
+    finish_auth finish_auth_func;
+
+    //SGW
+    pthread_t client_th;
     gs_tcp_propt_t *sgw_conn; // GS -> SGW
 
     bool is_merged;
@@ -136,7 +140,7 @@ typedef struct snf_args_s {
     uint8_t role;
     uint16_t AS_SAC;
     uint32_t AS_UA;
-    uint16_t AS_CURR_GS_SAC;
+    uint16_t SGW_SAC;
 } snf_args_t;
 
 typedef struct ss_recv_handler_s {
@@ -324,23 +328,29 @@ extern ss_recv_handler_t sgw_recv_handlers[];
 
 extern fsm_event_t ld_authc_fsm_events[];
 
-int8_t init_as_snf_layer(void);
+int8_t init_as_snf_layer(finish_auth finish_auth, trans_snp trans_snp);
 
-int8_t init_gs_snf_layer(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_port);
+int8_t init_gs_snf_layer(uint16_t GS_SAC, const char *gsnf_addr, uint16_t gsnf_port,
+                         trans_snp trans_snp);
 
-int8_t init_gs_snf_layer_unmerged(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_port);
+int8_t init_gs_snf_layer_unmerged(uint16_t GS_SAC, const char *gsnf_addr, uint16_t gsnf_port,
+                                  trans_snp trans_snp);
+
+int8_t init_sgw_snf_layer(uint16_t listen_port);
 
 int8_t clear_snf_en(snf_entity_t *snf_en);
 
 int8_t destory_snf_layer();
 
-int8_t entry_LME_AUTH(void *args);
+int8_t snf_LME_AUTH(void *args);
 
-int8_t exit_LME_AUTH(void *args);
+int8_t exit_LME_AUTH(void);
 
 int8_t register_snf_en(snf_args_t *snf_args);
 
 int8_t unregister_snf_en(uint16_t SAC);
+
+int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint8_t *buf, size_t buf_len);
 
 /*  ss */
 
@@ -377,8 +387,6 @@ l_err handle_recv_msg(buffer_t *buf, const snf_entity_t *as_man);
 l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_man, KEY_HANDLE key_med);
 
 /* gsnf */
-
-
 l_err trans_gsnf(gs_tcp_propt_t *conn, void *pkg, struct_desc_t *desc, l_err (*mid_func)(buffer_t *, void *),
                  void *args);
 

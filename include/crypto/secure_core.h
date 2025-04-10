@@ -31,11 +31,11 @@
 #define DEFAULT_VALIDATE 365
 //#define KEY_BIN_PATH  "/root/ldacs/stack_new/ldacs_stack/resources/keystore/rootkey.bin"
 #define KEY_BIN_PATH  "/root/ldacs/ldacs_sim_sgw/resources/keystore/rootkey.bin"
-
-enum p_sec {
-    AES_CMAC,
-    SM3_HMAC,
-};
+//
+// enum p_sec {
+//     AES_CMAC,
+//     SM3_HMAC,
+// };
 
 enum SEC_ALG_MACLEN {
     SEC_MACLEN_INVAILD = 0x0,

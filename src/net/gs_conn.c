@@ -3,8 +3,6 @@
 //
 
 
-#include <ldcauc.h>
-
 #include "net/gs_conn.h"
 #include "net/net.h"
 

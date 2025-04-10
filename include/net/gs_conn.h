@@ -4,6 +4,7 @@
 
 #ifndef GS_CONN_H
 #define GS_CONN_H
+
 #include "net/connection.h"
 
 typedef struct gs_tcp_propt_s {
@@ -33,4 +34,5 @@ bool reset_gs_conn(basic_conn_t **bcp);
 void close_gs_conn(basic_conn_t **bcp);
 
 void *gs_epoll_setup(void *args);
+
 #endif //GS_CONN_H

@@ -136,11 +136,11 @@ l_err recv_gsnf(basic_conn_t **bcp) {
             gsnf_pkt_cn_ini_t *init_pkt = calloc(1, sizeof(gsnf_pkt_cn_ini_t));
             PARSE_GSNF(&mlt_ld->bc->read_pkt, init_pkt, gsnf_pkt_cn_ini_desc, GSNF_PKT_CN_INI_HEAD_LEN, 0);
             if (has_enode_by_sac(init_pkt->AS_SAC) == FALSE && has_enode_by_ua(init_pkt->UA) == FALSE) {
-                register_snf_en(&(snf_args_t){
-                    .role = ROLE_SGW,
-                    .AS_UA = init_pkt->UA,
-                    .AS_SAC = init_pkt->AS_SAC,
-                    .AS_CURR_GS_SAC = snf_obj.GS_SAC
+                register_snf_en(&(snf_args_t) {
+                        .role = ROLE_SGW,
+                        .AS_UA = init_pkt->UA,
+                        .AS_SAC = init_pkt->AS_SAC,
+                        .SGW_SAC = snf_obj.GS_SAC
                 });
             } else {
                 return LD_ERR_INTERNAL;
@@ -172,11 +172,8 @@ l_err recv_gsnf(basic_conn_t **bcp) {
             switch (gsnf_pkt->G_TYP) {
                 case GSNF_SNF_UPLOAD: {
                     /* 构造具有指向性的传递结构，根据源和目的SAC指示下层向对应实体传输 */
-                    // orient_sdu_t *orient_sdu = create_orient_sdus(as_man->AS_SAC, lme_layer_objs.GS_SAC);
-                    //
-                    // /* 通过原语向SNP层传递对应报文 */
-                    // CLONE_TO_CHUNK(*orient_sdu->buf, gsnf_pkt->sdu->ptr, gsnf_pkt->sdu->len);
-                    // preempt_prim(&SN_DATA_REQ_PRIM, SN_TYP_FROM_LME, orient_sdu, free_orient_sdus, 0, 0);
+
+                    snf_obj.trans_snp_func(as_man->AS_SAC, snf_obj.GS_SAC, gsnf_pkt->sdu->ptr, gsnf_pkt->sdu->len);
                     break;
                 }
                 case GSNF_SNF_DOWNLOAD: {
@@ -187,8 +184,8 @@ l_err recv_gsnf(basic_conn_t **bcp) {
                 case GSNF_KEY_TRANS: {
                     pb_stream pbs;
                     gs_key_trans_t key_trans = {
-                        .key = init_buffer_ptr(ROOT_KEY_LEN),
-                        .nonce = init_buffer_ptr(SHAREDINFO_LEN)
+                            .key = init_buffer_ptr(ROOT_KEY_LEN),
+                            .nonce = init_buffer_ptr(SHAREDINFO_LEN)
                     };
 
                     init_pbs(&pbs, gsnf_pkt->sdu->ptr, gsnf_pkt->sdu->len, "GS KEY GET");
@@ -245,53 +242,53 @@ l_err recv_gsg(basic_conn_t **bcp) {
     gs_tcp_propt_t *mlt_ld = (gs_tcp_propt_t *) bcp;
     log_buf(LOG_INFO, "RECV GSG", mlt_ld->bc->read_pkt.ptr, mlt_ld->bc->read_pkt.len);
     switch ((*mlt_ld->bc->read_pkt.ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN))) {
-        case GS_SAC_RQST:
-        case GS_SAC_RESP: {
-            gsg_sac_pkt_t *gsnf_sac_pkg;
-            if (parse_gsg_sac_pkt(&mlt_ld->bc->read_pkt, &gsnf_sac_pkg) != LD_OK) {
-                return LD_ERR_INTERNAL;
-            }
-            switch (gsnf_sac_pkg->TYPE) {
-                case GS_SAC_RESP: {
-                    pb_stream pbs;
-                    gs_sac_resp_sdu_t resp;
-
-                    init_pbs(&pbs, gsnf_sac_pkg->sdu->ptr, gsnf_sac_pkg->sdu->len, "GS SAC RESP");
-                    if (in_struct(&resp, &gs_sac_resp_desc, &pbs, NULL) == FALSE) {
-                        return LD_ERR_INTERNAL;
-                    }
-
-                    if (has_enode_by_sac(resp.SAC) == FALSE) {
-                        // set_enode(init_as_man(resp.SAC, gsnf_sac_pkg->UA, lme_layer_objs.GS_SAC, LD_AUTHC_G0));
-                        register_snf_en(&(snf_args_t){
-                            .role = ROLE_SGW,
-                            .AS_UA = gsnf_sac_pkg->UA,
-                            .AS_SAC = resp.SAC,
-                            .AS_CURR_GS_SAC = snf_obj.GS_SAC
-                        });
-                    }
-
-                    /* TODO: 执行dls open的callback */
-                    // dls_en_data_t *dls_en_data = &(dls_en_data_t) {
-                    //     .
-                    //     GS_SAC = lme_layer_objs.GS_SAC,
-                    //     .
-                    //     AS_UA = gsnf_sac_pkg->UA,
-                    //     .
-                    //     AS_SAC = resp.SAC, //和GSC共同协商分配给AS的SAC 10.6.4.5
-                    // };
-                    //
-                    // preempt_prim(&DLS_OPEN_REQ_PRIM, DL_TYP_GS_INIT, dls_en_data, NULL, 0, 0);
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-
-            free_gsg_sac_pkg(gsnf_sac_pkg);
-            break;
-        }
+//        case GS_SAC_RQST:
+//        case GS_SAC_RESP: {
+//            gsg_sac_pkt_t *gsnf_sac_pkg;
+//            if (parse_gsg_sac_pkt(&mlt_ld->bc->read_pkt, &gsnf_sac_pkg) != LD_OK) {
+//                return LD_ERR_INTERNAL;
+//            }
+//            switch (gsnf_sac_pkg->TYPE) {
+//                case GS_SAC_RESP: {
+//                    pb_stream pbs;
+//                    gs_sac_resp_sdu_t resp;
+//
+//                    init_pbs(&pbs, gsnf_sac_pkg->sdu->ptr, gsnf_sac_pkg->sdu->len, "GS SAC RESP");
+//                    if (in_struct(&resp, &gs_sac_resp_desc, &pbs, NULL) == FALSE) {
+//                        return LD_ERR_INTERNAL;
+//                    }
+//
+//                    if (has_enode_by_sac(resp.SAC) == FALSE) {
+//                        // set_enode(init_as_man(resp.SAC, gsnf_sac_pkg->UA, lme_layer_objs.GS_SAC, LD_AUTHC_G0));
+//                        register_snf_en(&(snf_args_t) {
+//                                .role = ROLE_SGW,
+//                                .AS_UA = gsnf_sac_pkg->UA,
+//                                .AS_SAC = resp.SAC,
+//                                .SGW_SAC = snf_obj.GS_SAC
+//                        });
+//                    }
+//
+//                    /* TODO: 执行dls open的callback */
+//                    // dls_en_data_t *dls_en_data = &(dls_en_data_t) {
+//                    //     .
+//                    //     GS_SAC = lme_layer_objs.GS_SAC,
+//                    //     .
+//                    //     AS_UA = gsnf_sac_pkg->UA,
+//                    //     .
+//                    //     AS_SAC = resp.SAC, //和GSC共同协商分配给AS的SAC 10.6.4.5
+//                    // };
+//                    //
+//                    // preempt_prim(&DLS_OPEN_REQ_PRIM, DL_TYP_GS_INIT, dls_en_data, NULL, 0, 0);
+//                    break;
+//                }
+//                default: {
+//                    break;
+//                }
+//            }
+//
+//            free_gsg_sac_pkg(gsnf_sac_pkg);
+//            break;
+//        }
         case GS_SNF_UPLOAD:
         case GS_SNF_DOWNLOAD:
         case GS_UP_UPLOAD_TRANSPORT:
@@ -304,12 +301,7 @@ l_err recv_gsg(basic_conn_t **bcp) {
             switch (gsnf_pkg->TYPE) {
                 case GS_UP_UPLOAD_TRANSPORT:
                 case GS_SNF_UPLOAD: {
-                    /* 构造具有指向性的传递结构，根据源和目的SAC指示下层向对应实体传输 */
-                    // orient_sdu_t *orient_sdu = create_orient_sdus(as_man->AS_SAC, lme_layer_objs.GS_SAC);
-                    //
-                    // /* 通过原语向SNP层传递对应报文 */
-                    // CLONE_TO_CHUNK(*orient_sdu->buf, gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
-                    // preempt_prim(&SN_DATA_REQ_PRIM, SN_TYP_FROM_LME, orient_sdu, free_orient_sdus, 0, 0);
+                    snf_obj.trans_snp_func(as_man->AS_SAC, snf_obj.GS_SAC, gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
                     break;
                 }
                 case GS_SNF_DOWNLOAD: {
@@ -319,8 +311,8 @@ l_err recv_gsg(basic_conn_t **bcp) {
                 case GS_KEY_TRANS: {
                     pb_stream pbs;
                     gs_key_trans_t key_trans = {
-                        .key = init_buffer_ptr(ROOT_KEY_LEN),
-                        .nonce = init_buffer_ptr(SHAREDINFO_LEN)
+                            .key = init_buffer_ptr(ROOT_KEY_LEN),
+                            .nonce = init_buffer_ptr(SHAREDINFO_LEN)
                     };
 
                     init_pbs(&pbs, gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len, "GS KEY GET");
