@@ -1,0 +1,13 @@
+role: as
+UA: 10010
+port: 8081
+debug: 1
+
+init_fl_freq: 1110.0
+init_rl_freq: 964.0
+
+http:
+  http_port: 9456
+  auto_auth: 1
+
+gsnf_addr_v6: fe01::1

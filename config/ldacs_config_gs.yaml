@@ -1,0 +1,12 @@
+role: gs
+UA: 10086
+port: 8080
+debug: 1
+gsnf_addr: 127.0.0.1
+gsnf_addr_v6: ::1
+gsnf_port: 55558
+
+init_fl_freq: 1110.0
+init_rl_freq: 964.0
+http:
+  http_port: 9789

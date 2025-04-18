@@ -1,0 +1,5 @@
+role: sgw
+UA: 10000
+#port: 55551
+port: 55558  #sgw使用 -M 参数，port自动改为55551
+debug: 1
