@@ -20,11 +20,11 @@
 
 本项目依赖多个外部库以及内部项目，须按如下顺序安装依赖。
 
-#### 1. 安装libyaml、libevent、uthash、libcjson (Ubuntu)
+#### 1. 安装libyaml、libevent、uthash、libcjson、libsqlite3 (Ubuntu)
 
 ```shell
 sudo apt update && sudo apt upgrade
-sudo apt install libyaml-dev libevent-dev uthash-dev libcjson-dev
+sudo apt install libyaml-dev libevent-dev uthash-dev libcjson-dev libsqlite3-dev
 ```
 
 #### 2. 拉取并安装base64

@@ -93,7 +93,6 @@ l_err send_auc_resp(void *args) {
         }
     );
 
-    log_warn("????????????? %d",as_man->GS_SAC);
     if (generate_auc_kdf(snf_obj.role, as_man->shared_random, &as_man->key_as_sgw_s_h, &as_man->key_as_gs_h,
                          &as_man->key_as_gs_b, as_man->AS_UA, as_man->GS_SAC)) {
         //进入错误状态
@@ -142,7 +141,6 @@ l_err recv_auc_resp(buffer_t *buf, snf_entity_t *as_man) {
         }
     );
 
-    log_warn("????????????? %d",as_man->GS_SAC);
     if (generate_auc_kdf(snf_obj.role, as_man->shared_random, &as_man->key_as_sgw_s_h, &as_man->key_as_gs_h,
                          &as_man->key_as_gs_b, as_man->AS_UA, as_man->GS_SAC)) {
         //进入错误状态
@@ -236,7 +234,6 @@ static l_err generate_auz_info(buffer_t *buf, void *args) {
                                 }, &gsnf_as_auz_info_desc, "AS AUZ INFO"
     );
 
-    log_buf(LOG_ERROR, "MID FUNC", auz_buf->ptr, auz_buf->len)
     cat_to_buffer(buf, auz_buf->ptr, auz_buf->len);
     free_buffer(auz_buf);
 

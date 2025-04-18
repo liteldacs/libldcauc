@@ -15,7 +15,6 @@ l_err encrypt_uint8(void *key, uint8_t *in, size_t in_len, uint8_t *out, size_t 
     uint32_t sz = 0;
     km_decrypt(key, ALGO_ENC_AND_DEC, iv, out, *out_len, plain, &sz, TRUE);
 
-    log_buf(LOG_ERROR, "OUT IN", in, in_len);
 #else
     SM4_KEY sm4_key;
     sm4_set_encrypt_key(&sm4_key, key);
@@ -63,7 +62,6 @@ void calc_hmac_uint(uint8_t *udata, size_t data_len, void *key_med, uint8_t *mac
     uint8_t mac_buf[32] = {0};
 #ifdef USE_CRYCARD
     uint32_t hmac_len = 0;
-    log_warn("!!!!!!!!!!!!!!!!!!!!!!! %d", data_len);
     if(km_hmac_with_keyhandle(key_med, udata, data_len, mac_buf, &hmac_len) != LD_KM_OK){
         log_warn("Cant calc hmac");
     }
@@ -85,8 +83,6 @@ bool verify_hmac_uint(void *key_med, uint8_t *to_verify, uint8_t *udata, size_t 
     uint8_t mac_buf[32] = {0};
     calc_hmac_uint(udata, data_len, key_med, mac_buf, mac_limit);
 
-    log_buf(LOG_DEBUG, "to_veri", to_verify, mac_limit);
-    log_buf(LOG_DEBUG, "mac_buf", mac_buf, mac_limit);
     return !memcmp(to_verify, mac_buf, mac_limit);
 }
 
