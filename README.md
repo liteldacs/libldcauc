@@ -111,7 +111,7 @@ make -j12 && sudo make install
 
 ```shell
 git clone https://github.com/liteldacs/libldcauc.git
-cd liteldacssdk && mkdir build && cd build
+cd libldcauc && mkdir build && cd build
 cmake ..  //这里需要添加和libliteldacscrypto中一致的选项
 make -j12 && sudo make install
 ```
