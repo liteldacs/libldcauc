@@ -4,9 +4,117 @@
 
 ## 概述
 
-本库提供网络功能层(SNF)的核心接口，用于不同角色（AS/GS/SGW）的初始化、安全通信及数据处理。主要功能包括SNF层初始化、认证流程、数据加密/解密、完整性校验等。
+本项目提供网络功能层(SNF)的核心接口，用于不同角色（AS/GS/SGW）的初始化、安全通信及数据处理。主要功能包括SNF层初始化、认证流程、数据加密/解密、完整性校验等。
 
-其中，安全网关角色（SGW）仅用作测试用，详见ldacs-combine项目
+当前版本 ***尚未*** 定义切换过程中使用的接口。
+
+其中，库中所定义的安全网关角色（SGW）仅作测试用，测试过程中使用的安全网关详见ldacs-combine项目。
+
+---
+
+## 安装
+
+⚠️ **注意**：本项目要求 CMake 最低版本为 **3.20**。如果构建失败，请先检查 CMake 版本！
+
+### 依赖安装
+
+本项目依赖多个外部库以及内部项目，须按如下顺序安装依赖。
+
+#### 1. 安装libyaml、libevent、uthash、libcjson (Ubuntu)
+
+```shell
+sudo apt update && sudo apt upgrade
+sudo apt install libyaml-dev libevent-dev uthash-dev libcjson-dev
+```
+
+#### 2. 拉取并安装base64
+
+```shell
+git clone https://github.com/aklomp/base64.git
+cd base64 && mkdir build && cd build
+cmake ..
+make -j12 && sudo make install
+```
+
+#### 3. 安装密码卡驱动和库文件
+
+- **对于尚未使用密码卡的环境**
+
+```shell
+git clone https://github.com/guanzhi/GmSSL.git
+cd GmSSL && mkdir build && cd build
+cmake .. 
+&& make -j12 && sudo make install
+```
+
+- **对于AS、GS设备**
+
+使用piico-manager密码卡工具安装驱动及依赖库
+
+```shell
+git clone xxxx
+```
+
+- **对于SGW设备**
+
+请直接使用提供的网关工控机
+
+#### 4. 安装libliteldacscrypto
+
+```shell
+git clone https://github.com/liteldacs/liteldacscrypto.git
+cd liteldacscrypto && mkdir build && cd build
+```
+
+根据环境设置选项
+
+- **对于尚未使用密码卡的设备**
+
+```shell
+cmake ..
+```
+
+- **对于AS设备**
+
+```shell
+cmake .. -DAS_DEVICE=ON
+```
+
+- **对于GS设备**
+
+```shell
+cmake .. -DGS_DEVICE=ON
+```
+
+- **对于SGW设备**
+
+```shell
+cmake .. -DSGW_DEVICE=ON
+```
+
+编译并安装
+
+```shell
+make -j12 & sudo make install
+```
+
+#### 5. 安装libliteldacssdk
+
+```shell
+git clone https://github.com/liteldacs/liteldacssdk.git
+cd liteldacssdk && mkdir build && cd build
+cmake ..
+make -j12 && sudo make install
+```
+
+### 安装本项目
+
+```shell
+git clone https://github.com/liteldacs/libldcauc.git
+cd liteldacssdk && mkdir build && cd build
+cmake ..  //这里需要添加和libliteldacscrypto中一致的选项
+make -j12 && sudo make install
+```
 
 ---
 
