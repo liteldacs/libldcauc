@@ -4,10 +4,10 @@
 
 #include "net/net_epoll.h"
 
-int net_epoll_add(int e_fd, void *opt_ptr, uint32_t events,
+int net_epoll_add(int e_fd, basic_conn_t *bc, uint32_t events,
                   struct epoll_event *pev) {
-    FILL_EPOLL_EVENT(pev, opt_ptr, events);
-    return core_epoll_add(e_fd, (*(basic_conn_t **) opt_ptr)->fd, pev);
+    FILL_EPOLL_EVENT(pev, bc, events);
+    return core_epoll_add(e_fd, bc->fd, pev);
 }
 
 void net_epoll_out(int e_fd, basic_conn_t *bc) {

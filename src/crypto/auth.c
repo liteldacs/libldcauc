@@ -10,9 +10,10 @@
 #include <ld_statemachine.h>
 #include <ld_buffer.h>
 #include <ld_santilizer.h>
-#include "snp_sub.h"
 #include "crypto/authc.h"
 #include "crypto/key.h"
+#include "snp_sub.h"
+#include "snf.h"
 
 
 struct sm_state_s ld_authc_states[] = {
@@ -174,29 +175,29 @@ buffer_t *get_auc_sharedinfo_buf(auc_sharedinfo_t *info) {
         return NULL;
     }
     close_output_pbs(&pbs);
-    CLONE_TO_CHUNK(*info_buf, pbs.start, pbs_offset(&pbs));
+    CLONE_TO_CHUNK(*info_buf, pbs.start, pbs_offset(&pbs))
     return info_buf;
 }
 
-l_err generate_auc_kdf(ldacs_roles role, buffer_t *random, KEY_HANDLE*key_as_sgw, KEY_HANDLE*key_as_gs,
-                       buffer_t **key_as_gs_raw) {
+l_err
+generate_auc_kdf(ldacs_roles role, buffer_t *random, void **key_as_sgw, void **key_as_gs, buffer_t **key_as_gs_raw,
+                 uint16_t AS_UA, uint16_t GS_FLAG) {
     UA_STR(ua_as);
     UA_STR(ua_gs);
     UA_STR(ua_sgw);
-    get_ua_str(10010, ua_as);
-    get_ua_str(10086, ua_gs);
-    get_ua_str(10000, ua_sgw);
+    get_ua_str(AS_UA, ua_as);
+    get_ua_str(GS_FLAG, ua_gs);
+    get_ua_str(DFT_SGW_UA, ua_sgw);
 
     switch (role) {
         case LD_AS:
             as_derive_keys(random->ptr, random->len, ua_as, ua_gs, ua_sgw, key_as_sgw, key_as_gs);
-            // log_buf(LOG_ERROR, "AS KEY", (*(buffer_t **)key_as_gs)->ptr, (*(buffer_t **)key_as_gs)->len);
             break;
         case LD_SGW:
             sgw_derive_keys(random->ptr, random->len, ua_as, ua_gs, ua_sgw, key_as_sgw, key_as_gs_raw);
-
-            // log_buf(LOG_ERROR, "SGW KEY", (*(buffer_t **)key_as_gs_raw)->ptr, (*(buffer_t **)key_as_gs_raw)->len);
             break;
+        default:
+            return LD_ERR_WRONG_PARA;
     }
     return LD_OK;
 }

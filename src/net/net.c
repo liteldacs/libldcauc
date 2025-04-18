@@ -68,8 +68,8 @@ static int make_std_tcp_connect(struct sockaddr_in *to_conn_addr, char *addr, in
     int enable = SO_REUSEADDR;
 
     struct timeval timeout = {
-            .tv_sec = 5, /* after 5 seconds connect() will timeout  */
-            .tv_usec = 0,
+        .tv_sec = 5, /* after 5 seconds connect() will timeout  */
+        .tv_usec = 0,
     };
 
     inet_pton(AF_INET, addr, &s);
@@ -106,8 +106,8 @@ static int make_std_tcpv6_connect(struct sockaddr_in6 *to_conn_addr, char *addr,
     int enable = SO_REUSEADDR;
 
     struct timeval timeout = {
-            .tv_sec = 5, /* after 5 seconds connect() will timeout  */
-            .tv_usec = 0,
+        .tv_sec = 5, /* after 5 seconds connect() will timeout  */
+        .tv_usec = 0,
     };
 
     inet_pton(AF_INET6, addr, &s);
@@ -273,11 +273,11 @@ static int init_std_tcp_accept_handler(basic_conn_t *bc) {
 
 
 const struct role_propt role_propts[] = {
-        // {LD_AS, LD_UDP_CLIENT, NULL, init_as_handler},
-        // {(LD_GS | LD_AS), LD_UDP_SERVER, make_gs_as_server, init_gs_as_handler},
-        {LD_GS,  LD_TCP_CLIENT, NULL,                  init_std_tcp_conn_handler},
-        {LD_SGW, LD_TCP_SERVER, make_std_tcpv6_server, init_std_tcp_accept_handler},
-        {0,      0,             0,                     0},
+    // {LD_AS, LD_UDP_CLIENT, NULL, init_as_handler},
+    // {(LD_GS | LD_AS), LD_UDP_SERVER, make_gs_as_server, init_gs_as_handler},
+    {LD_GS, LD_TCP_CLIENT, NULL, init_std_tcp_conn_handler},
+    {LD_SGW, LD_TCP_SERVER, make_std_tcpv6_server, init_std_tcp_accept_handler},
+    {0, 0, 0, 0},
 };
 
 const struct role_propt *get_role_propt(int role) {
@@ -318,19 +318,18 @@ static int response_send_buffer(basic_conn_t *bc) {
 }
 
 
-int response_handle(basic_conn_t **bcp) {
-    basic_conn_t *bc = *bcp;
+int response_handle(basic_conn_t *bc) {
     int status;
 
     if (bc->opt->send_handler) {
-        bc->opt->send_handler(bcp);
+        bc->opt->send_handler(bc);
     }
     do {
         status = response_send_buffer(bc);
     } while (status == OK && bc->trans_done != TRUE);
     if (bc->trans_done) {
         // response done
-        if (bc->opt->reset_conn) bc->opt->reset_conn(bcp);
+        if (bc->opt->reset_conn) bc->opt->reset_conn(bc);
         net_epoll_in(epoll_fd, bc);
     }
     return status;
@@ -387,11 +386,9 @@ static int read_packet(int fd, buffer_t *but) {
 }
 
 
-int request_handle(basic_conn_t **bcp) {
-    basic_conn_t *bc = *bcp;
-
+int request_handle(basic_conn_t *bc) {
     if (read_packet(bc->fd, &bc->read_pkt) == ERROR) return ERROR;
-    bc->opt->recv_handler(bcp);
+    bc->opt->recv_handler(bc);
 
     return OK;
 }

@@ -4,20 +4,23 @@
 
 
 #include "net/gs_conn.h"
+
+#include <ld_config.h>
+
 #include "net/net.h"
 
 
 gs_tcp_propt_t *init_gs_conn(int role, net_opt_t *net_opt) {
     gs_tcp_propt_t *gs_conn = malloc(sizeof(gs_tcp_propt_t));
 
-    if (init_basic_conn(gs_conn, net_opt, role) == FALSE) {
+    if (init_basic_conn(&gs_conn->bc, net_opt, role) == FALSE) {
         return NULL;
     }
 
     return gs_conn;
 }
 
-bool send_gs_pkt(basic_conn_t **bcp) {
+bool send_gs_pkt(basic_conn_t *bcp) {
     // gs_tcp_propt_t *mlt_ld = (gs_tcp_propt_t *) bcp;
     // CLONE_TO_CHUNK(mlt_ld->bc->write_pkt, mlt_ld->tpacket.ptr, mlt_ld->tpacket.len)
     return TRUE;
@@ -32,13 +35,13 @@ static bool gs_conn_accept(net_opt_t *net_opt) {
     return TRUE;
 }
 
-bool reset_gs_conn(basic_conn_t **bcp) {
-    gs_tcp_propt_t *mlt_ld = (gs_tcp_propt_t *) bcp;
+bool reset_gs_conn(basic_conn_t *bc) {
+    gs_tcp_propt_t *mlt_ld = (gs_tcp_propt_t *) bc;
     return TRUE;
 }
 
-void close_gs_conn(basic_conn_t **bcp) {
-    gs_tcp_propt_t *mlt_ld = (gs_tcp_propt_t *) bcp;
+void close_gs_conn(basic_conn_t *bc) {
+    gs_tcp_propt_t *mlt_ld = (gs_tcp_propt_t *) bc;
     log_warn("Closing connection!");
 }
 
@@ -57,31 +60,30 @@ void *gs_epoll_setup(void *args) {
         /* processing ready fd one by one */
         for (i = 0; i < nfds; i++) {
             struct epoll_event *curr_event = epoll_events + i;
-            int fd = *((int *) (curr_event->data.ptr));
-
+            int fd = *((int *) curr_event->data.ptr);
             if (fd == net_opt->server_fd) {
                 gs_conn_accept(net_opt); /* never happened in GS */
             } else {
-                basic_conn_t **bcp = curr_event->data.ptr;
+                basic_conn_t *bc = curr_event->data.ptr;
                 int status;
-                assert(bcp != NULL);
+                assert(bc != NULL);
 
-                if (connecion_is_expired(bcp, net_opt->timeout))
+                if (connecion_is_expired(bc, net_opt->timeout))
                     continue;
 
                 if (curr_event->events & EPOLLIN) {
                     //recv
-                    status = request_handle(bcp);
+                    status = request_handle(bc);
                 }
                 if (curr_event->events & EPOLLOUT) {
                     //send
-                    status = response_handle(bcp);
+                    status = response_handle(bc);
                 }
 
                 if (status == ERROR)
-                    connecion_set_expired(bcp);
+                    connecion_set_expired(bc);
                 else {
-                    connecion_set_reactivated(bcp);
+                    connecion_set_reactivated(bc);
                 }
             }
         }
