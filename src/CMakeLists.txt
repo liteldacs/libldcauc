@@ -54,12 +54,6 @@ endif ()
 
 find_package(Ldacscrypto REQUIRED)
 if (Ldacscrypto_FOUND)
-    #    get_cmake_property(_variableNames VARIABLES)
-    #    foreach (_variableName ${_variableNames})
-    #        if (_variableName MATCHES "^Ldacscrypto")
-    #            message(STATUS "${_variableName}=${${_variableName}}")
-    #        endif ()
-    #    endforeach ()
     target_include_directories(${PROJECT_NAME} PUBLIC ${Ldacscrypto_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC ldacscrypto::ldacscrypto)
 endif ()
@@ -107,3 +101,36 @@ set(SO_PATH /usr/local/ldacs-cauc/lib)
 set(SO_CONFIG_DIR /etc/ld.so.conf.d)
 
 INSTALL(CODE "execute_process(COMMAND sudo sh -c \"echo ${SO_PATH} > ${SO_CONFIG_DIR}/ldacs-cauc.conf\" COMMAND sudo ldconfig )")
+
+message(${CMAKE_INSTALL_PREFIX})
+INSTALL(CODE "
+    # 创建目录（包含父目录）
+    file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/log\")
+    # 设置目录权限：所有者读写执行，组和其他人读执行
+    file(CHMOD \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}\"
+        DIRECTORY_PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_EXECUTE
+        WORLD_READ WORLD_EXECUTE
+    )
+    file(CHMOD \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/log\"
+        DIRECTORY_PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_EXECUTE GROUP_WRITE
+        WORLD_READ WORLD_EXECUTE WORLD_WRITE
+    )
+
+    file(COPY \"${CMAKE_SOURCE_DIR}/config\"
+    DESTINATION \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}\"
+    FILE_PERMISSIONS
+        OWNER_READ OWNER_WRITE
+        GROUP_READ
+        WORLD_READ
+    )
+    file(CHMOD \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/config\"
+        DIRECTORY_PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_EXECUTE
+        WORLD_READ WORLD_EXECUTE
+    )
+")

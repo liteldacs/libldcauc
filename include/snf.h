@@ -10,6 +10,7 @@
 #include <ld_santilizer.h>
 #include <ldacs_sim.h>
 #include <ld_primitive.h>
+#include <ld_heap.h>
 #include "ldcauc.h"
 #include "snp_sub.h"
 #include "net/gs_conn.h"

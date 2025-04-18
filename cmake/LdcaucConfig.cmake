@@ -27,5 +27,5 @@ endmacro()
 include("${CMAKE_CURRENT_LIST_DIR}/LdcaucTargets.cmake")
 
 # 提供旧式变量（兼容 find_package 传统用法）
-set(Ldcauc_INCLUDE_DIRS "/usr/local/ldacs-cauc/include/utils")
+set(Ldcauc_INCLUDE_DIRS "/usr/local/ldacs-cauc/include/ldcauc")
 set(Ldcauc_LIBRARIES "/usr/local/ldacs-cauc/lib")
