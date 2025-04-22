@@ -7,7 +7,7 @@
 
 
 #define IPV6_ADDRLEN 128
-#define GEN_ADDRLEN 128 >> 3
+#define GEN_ADDRLEN 128
 typedef struct basic_conn_s basic_conn_t;
 
 #include "net.h"
