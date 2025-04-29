@@ -170,9 +170,11 @@ int8_t unregister_snf_en(uint16_t AS_SAC);
 int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_buf, size_t buf_len);
 
 /**
- *
- * @param AS_SAC
- * @param AS_UA
+ * \brief Handover响应，应在目标GS接收到源GS的切换提醒时调用
+ * @param[in] AS_SAC 切换`AS`对应的SAC
+ * @param[in] AS_UA 切换`AS`对应的UA
+ * @param[in] GSS_SAC 源`GS`对应的SAC
+ * @param[in] GST_SAC 目标`GS`对应的SAC
  * @return 错误码
  */
 int8_t handover_response(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC, uint16_t GST_SAC);
