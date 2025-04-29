@@ -7,7 +7,6 @@
 #include "crypto/cipher.h"
 #include "crypto/authc.h"
 #include "crypto/key.h"
-#include "net/net_core.h"
 #include <ld_santilizer.h>
 
 
@@ -22,7 +21,7 @@ l_err send_auc_rqst(void *args) {
         . VER = snf_obj.PROTOCOL_VER,
         . PID = PID_MAC,
         . AS_SAC = as_man->AS_SAC,
-        . GS_SAC = as_man->GS_SAC,
+        . GS_SAC = as_man->CURR_GS_SAC,
         . MAC_LEN = as_man->AUTHC_MACLEN,
         . AUTH_ID = as_man->AUTHC_AUTH_ID,
         . ENC_ID = as_man->AUTHC_ENC_ID,
@@ -88,13 +87,13 @@ l_err send_auc_resp(void *args) {
             . ENC_ID = as_man->AUTHC_ENC_ID,
             . N_2 = n_2,
             . AS_SAC = as_man->AS_SAC,
-            . GS_SAC = as_man->GS_SAC,
+            . GS_SAC = as_man->CURR_GS_SAC,
             . K_LEN = as_man->AUTHC_KLEN,
         }
     );
 
     if (generate_auc_kdf(snf_obj.role, as_man->shared_random, &as_man->key_as_sgw_s_h, &as_man->key_as_gs_h,
-                         &as_man->key_as_gs_b, as_man->AS_UA, as_man->GS_SAC)) {
+                         &as_man->key_as_gs_b, as_man->AS_UA, as_man->CURR_GS_SAC)) {
         //进入错误状态
         return LD_ERR_INTERNAL;
     }
@@ -104,7 +103,7 @@ l_err send_auc_resp(void *args) {
         . VER = snf_obj.PROTOCOL_VER,
         . PID = PID_MAC,
         . AS_SAC = as_man->AS_SAC,
-        . GS_SAC = as_man->GS_SAC,
+        . GS_SAC = as_man->CURR_GS_SAC,
         . MAC_LEN = as_man->AUTHC_MACLEN,
         . AUTH_ID = as_man->AUTHC_AUTH_ID,
         . ENC_ID = as_man->AUTHC_ENC_ID,
@@ -142,7 +141,7 @@ l_err recv_auc_resp(buffer_t *buf, snf_entity_t *as_man) {
     );
 
     if (generate_auc_kdf(snf_obj.role, as_man->shared_random, &as_man->key_as_sgw_s_h, &as_man->key_as_gs_h,
-                         &as_man->key_as_gs_b, as_man->AS_UA, as_man->GS_SAC)) {
+                         &as_man->key_as_gs_b, as_man->AS_UA, as_man->CURR_GS_SAC)) {
         //进入错误状态
         return LD_ERR_INTERNAL;
     }
@@ -185,7 +184,7 @@ l_err send_auc_key_exec(void *args) {
         . VER = snf_obj.PROTOCOL_VER,
         . PID = PID_MAC,
         . AS_SAC = as_man->AS_SAC,
-        . GS_SAC = as_man->GS_SAC,
+        . GS_SAC = as_man->CURR_GS_SAC,
         . MAC_LEN = as_man->AUTHC_MACLEN,
         . AUTH_ID = as_man->AUTHC_AUTH_ID,
         . ENC_ID = as_man->AUTHC_ENC_ID,
@@ -240,6 +239,7 @@ static l_err generate_auz_info(buffer_t *buf, void *args) {
     return LD_OK;
 }
 
+
 l_err finish_auc(void *args) {
     //the auth has done
     log_info("+++++++++++++===== GS AUTH AS OK =====++++++++++++++");
@@ -249,29 +249,31 @@ l_err finish_auc(void *args) {
                                 . nonce = as_man->shared_random
                             }, &gs_key_trans_desc, "GS KEY"
     );
-    if (trans_gsnf(as_man->gs_conn, &(gsnf_pkt_cn_t){
-                       GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8, sdu
-                   }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
-    )) {
+
+    gs_propt_node_t *save = get_conn_enode(as_man->CURR_GS_SAC);
+    if (save && save->propt->bc.opt->send_handler(&save->propt->bc, &(gsnf_pkt_cn_t){
+                                                      GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
+                                                      sdu
+                                                  }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
+        )) {
         log_warn("SGW send GS key failed");
         free_buffer(sdu);
+        return LD_ERR_INTERNAL;
     }
-    free_buffer(sdu);
-
-    // if (config.role == LD_AS || config.role == LD_GS) {
-    //     if (preempt_prim(&LME_STATE_IND_PRIM, LME_AS_UPDATE, as_man, NULL, 0, 0)) {
-    //     }
+    // log_warn("!!!!! %d %d", as_man->gs_conn->bc.fd, get_conn_enode(as_man->GS_SAC)->bc.fd);
+    // if (trans_gsnf(get_conn_enode(as_man->GS_SAC), &(gsnf_pkt_cn_t){
+    //                    GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8, sdu
+    //                }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
+    // )) {
+    //     log_warn("SGW send GS key failed");
+    //     free_buffer(sdu);
+    //     return LD_ERR_INTERNAL;
     // }
-
-    /* TODO: 临时，用于测试密钥更新 */
-    // send_key_update_rqst(as_man);
-
+    free_buffer(sdu);
     return LD_OK;
 }
 
-l_err send_key_update_rqst(void *args) {
-    snf_entity_t *as_man = args;
-
+l_err send_key_update_rqst(snf_entity_t *en, uint16_t GST_SAC) {
     /* 生成随机数NONCE */
     buffer_t *nonce = init_buffer_ptr(32);
     uint8_t NONCE_str[NONCE_LEN] = {0};
@@ -282,15 +284,15 @@ l_err send_key_update_rqst(void *args) {
         .S_TYP = KEY_UPD_RQST,
         .VER = snf_obj.PROTOCOL_VER,
         .PID = PID_MAC,
-        .AS_SAC = as_man->AS_SAC,
+        .AS_SAC = en->AS_SAC,
         .KEY_TYPE = MASTER_KEY_AS_SGW,
-        .SAC_src = as_man->GS_SAC,
-        .SAC_dst = as_man->GS_SAC, /* 假设GS没变 */
+        .SAC_src = en->CURR_GS_SAC,
+        .SAC_dst = GST_SAC, /* 假设GS没变 */
         .NCC = 10086,
         .NONCE = nonce,
     };
 
-    handle_send_msg(key_upd_rqst, &key_upd_rqst_desc, as_man, as_man->key_as_sgw_s_h);
+    handle_send_msg(key_upd_rqst, &key_upd_rqst_desc, en, en->key_as_sgw_s_h);
 
     free_buffer(nonce);
     return LD_OK;
@@ -313,18 +315,18 @@ l_err recv_key_update_rqst(buffer_t *buf, snf_entity_t *as_man) {
     UA_STR(ua_gs_src);
     UA_STR(ua_gs_dst);
     UA_STR(ua_sgw);
-    get_ua_str(10010, ua_as);
-    get_ua_str(10086, ua_gs_src);
-    get_ua_str(10087, ua_gs_dst);
-    get_ua_str(10000, ua_sgw);
+    get_ua_str(as_man->AS_UA, ua_as);
+    get_ua_str(key_upd_rqst.SAC_src, ua_gs_src);
+    get_ua_str(key_upd_rqst.SAC_dst, ua_gs_dst);
+    get_ua_str(DFT_SGW_UA, ua_sgw);
     as_update_mkey(ua_sgw, ua_gs_src, ua_gs_dst, ua_as, key_upd_rqst.NONCE, &as_man->key_as_gs_h);
 
-    send_key_update_resp(as_man);
+    send_key_update_resp(as_man, key_upd_rqst.SAC_dst);
     return LD_OK;
 }
 
 
-l_err send_key_update_resp(void *args) {
+l_err send_key_update_resp(void *args, uint16_t GST_SAC) {
     snf_entity_t *as_man = args;
     key_upd_resp_t key_upd_resp = {
         .S_TYP = KEY_UPD_RESP,
@@ -332,7 +334,7 @@ l_err send_key_update_resp(void *args) {
         .PID = PID_MAC,
         .AS_SAC = as_man->AS_SAC,
         .KEY_TYPE = MASTER_KEY_AS_SGW,
-        .SAC_dst = as_man->GS_SAC,
+        .SAC_dst = GST_SAC,
         .NCC = 10086,
     };
     handle_send_msg(&key_upd_resp, &key_upd_resp_desc, as_man, as_man->key_as_sgw_s_h);
@@ -348,6 +350,21 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man) {
     in_struct(&key_upd_resp, &key_upd_resp_desc, &pbs, NULL);
     if (!pb_in_mac(&pbs, get_sec_maclen(as_man->AUTHC_MACLEN), as_man->key_as_sgw_s_h, verify_hmac_uint)) {
         return LD_ERR_INVALID_MAC;
+    }
+
+    buffer_t *sdu = gen_pdu(&(gs_key_trans_t){
+                                .key = as_man->key_as_gs_b,
+                                .nonce = as_man->shared_random
+                            }, &gs_key_trans_desc, "GS KEY"
+    );
+    gs_propt_node_t *save = get_conn_enode(key_upd_resp.SAC_dst);
+    if (!save || save->propt->bc.opt->send_handler(&save->propt->bc, &(gsnf_pkt_cn_t){
+                                                       GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
+                                                       sdu
+                                                   }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
+        )) {
+        log_warn("SGW send GS key failed");
+        free_buffer(sdu);
     }
 
     return LD_OK;
@@ -367,10 +384,10 @@ l_err send_sn_session_est_resp(void *args) {
     char ipv6_bin[16] = {0};
 
     // Convert IPv6 string to binary
-    if (inet_pton(AF_INET6, snf_obj.net_opt.addr, ipv6_bin) != 1) {
-        log_error("inet_pton");
-        return LD_ERR_INTERNAL;
-    }
+    // if (inet_pton(AF_INET6, snf_obj.net_opt.addr, ipv6_bin) != 1) {
+    //     log_error("inet_pton");
+    //     return LD_ERR_INTERNAL;
+    // }
 
     CLONE_TO_CHUNK(*est_resp.IP_AS, (uint8_t *) ipv6_bin, IPV6_ADDRLEN >> 3)
 
@@ -418,11 +435,13 @@ l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_man, KEY
 
     if (snf_obj.role == LD_SGW) {
         CLONE_TO_CHUNK(*sdu, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs))
-        trans_gsnf(as_man->gs_conn,
-                   &(gsnf_pkt_cn_t){GSNF_SNF_UPLOAD, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_F, sdu},
-                   &gsnf_pkt_cn_desc, NULL, NULL);
+        as_man->gs_conn->bc.opt->send_handler(&as_man->gs_conn->bc,
+                                              &(gsnf_pkt_cn_t){
+                                                  GSNF_SNF_UPLOAD, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_F, sdu
+                                              },
+                                              &gsnf_pkt_cn_desc, NULL, NULL);
     } else if (snf_obj.role == LD_AS) {
-        snf_obj.trans_snp_func(as_man->AS_SAC, as_man->GS_SAC, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs));
+        snf_obj.trans_snp_func(as_man->AS_SAC, as_man->CURR_GS_SAC, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs));
     }
 
     return LD_OK;

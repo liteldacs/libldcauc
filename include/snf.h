@@ -13,11 +13,9 @@
 #include <ld_heap.h>
 #include "ldcauc.h"
 #include "snp_sub.h"
-#include "net/gs_conn.h"
-#include "net/net_epoll.h"
+#include "gs_conn.h"
 
 #define DEFAULT_GSNF_VERSION 0x01
-#define GSNF_MSG_MAX_LEN 512
 #define GTYP_LEN 4
 
 #define DFT_SGW_UA 10000
@@ -41,6 +39,7 @@ typedef enum {
     GSNF_INITIAL_AS = 0xD1,
     GSNF_SNF_UPLOAD = 0x72,
     GSNF_SNF_DOWNLOAD = 0xD3,
+    GSNF_KEY_UPD_REMIND = 0x51,
     GSNF_KEY_TRANS = 0x75,
     GSNF_AS_AUZ_INFO = 0xB4,
     GSNF_STATE_CHANGE = 0xEE,
@@ -88,7 +87,7 @@ typedef enum {
 typedef struct snf_entity_s {
     uint32_t AS_UA;
     uint16_t AS_SAC;
-    uint16_t GS_SAC; /* current connected/to connect GS SAC for AS */
+    uint16_t CURR_GS_SAC; /* current connected/to connect GS SAC for AS */
 
     uint8_t AUTHC_MACLEN,
             AUTHC_AUTH_ID,
@@ -106,7 +105,7 @@ typedef struct snf_entity_s {
     //for GS
     bool gs_finish_auth;
     /* for SGW */
-    gs_tcp_propt_t *gs_conn; // SGW -> GS
+    gs_propt_t *gs_conn; // SGW -> GS
 
     /* for GSC */
     uint32_t gsnf_count;
@@ -118,17 +117,14 @@ typedef struct snf_obj_s {
     uint8_t PROTOCOL_VER;
     ldacs_roles role;
     uint16_t GS_SAC;
-    net_opt_t net_opt;
+    // net_ctx_t net_ctx;
 
     trans_snp trans_snp_func;
     register_snf_fail register_fail_func;
+    finish_handover finish_handover_func;
 
     //AS
     finish_auth finish_auth_func;
-
-    //SGW
-    pthread_t client_th;
-    gs_tcp_propt_t *sgw_conn; // GS -> SGW
 
     bool is_merged;
 } snf_obj_t;
@@ -282,6 +278,15 @@ typedef struct gsnf_st_chg_s {
     uint16_t GS_SAC;
 } gsnf_st_chg_t;
 
+typedef struct gsnf_key_upd_remind_s {
+    uint8_t G_TYP;
+    uint8_t VER;
+    uint16_t AS_SAC;
+    uint8_t KEY_TYPE;
+    uint16_t GSS_SAC;
+    uint16_t GST_SAC;
+} gsnf_key_upd_remind_t;
+
 typedef struct gs_key_trans_s {
     buffer_t *key;
     buffer_t *nonce;
@@ -290,6 +295,7 @@ typedef struct gs_key_trans_s {
 typedef struct gs_sac_resp_sdu_s {
     uint16_t SAC;
 } gs_sac_resp_sdu_t;
+
 
 #pragma pack()
 
@@ -309,6 +315,7 @@ extern struct_desc_t gsnf_pkt_cn_desc;
 extern struct_desc_t gsnf_pkt_cn_ini_desc;
 extern struct_desc_t gsnf_as_auz_info_desc;
 extern struct_desc_t gsnf_st_chg_desc;
+extern struct_desc_t gsnf_key_upd_remind_desc;
 extern struct_desc_t gs_sac_resp_desc;
 extern struct_desc_t gs_key_trans_desc;
 
@@ -344,13 +351,13 @@ l_err recv_auc_key_exec(buffer_t *buf, snf_entity_t *as_man);
 
 l_err finish_auc(void *args);
 
-l_err send_key_update_rqst(void *args);
+l_err send_key_update_rqst(snf_entity_t *en, uint16_t GST_SAC);
 
-l_err send_key_update_rqst(void *args);
+l_err send_key_update_rqst(snf_entity_t *en, uint16_t GST_SAC);
 
 l_err recv_key_update_rqst(buffer_t *buf, snf_entity_t *as_man);
 
-l_err send_key_update_resp(void *args);
+l_err send_key_update_resp(void *args, uint16_t GST_SAC);
 
 l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man);
 
@@ -363,9 +370,6 @@ l_err handle_recv_msg(buffer_t *buf, const snf_entity_t *as_man);
 l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_man, KEY_HANDLE key_med);
 
 /* gsnf */
-l_err trans_gsnf(gs_tcp_propt_t *conn, void *pkg, struct_desc_t *desc, l_err (*mid_func)(buffer_t *, void *),
-                 void *args);
-
 l_err recv_gsnf(basic_conn_t *bcp);
 
 l_err recv_gsg(basic_conn_t *bcp);
@@ -374,7 +378,7 @@ l_err recv_gsg(basic_conn_t *bcp);
 
 struct hashmap *init_enode_map();
 
-bool has_enode_by_sac(const uint16_t as_sac);
+bool has_enode_by_sac(const uint16_t gs_sac);
 
 bool has_enode_by_ua(uint32_t target_UA);
 
