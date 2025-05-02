@@ -17,7 +17,7 @@ l_err delete_conn_enode_by_connptr(gs_propt_t *ptr, int8_t (*clear_func)(gs_prop
 gs_conn_service_t conn_service = {
     .conn_defines = {
         {"127.0.0.1", 55559, 4000},
-        {"127.0.0.1", 55560, 4001},
+        // {"127.0.0.1", 55560, 4001},
         {NULL, 0, 0}
     },
 };
