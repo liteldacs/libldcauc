@@ -1,4 +1,4 @@
-# Libldcauc SNF / SNP-Sub 层接口文档 V1.0.0
+# Libldcauc SNF / SNP-Sub 层接口文档 V1.1.0
 
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
@@ -6,9 +6,17 @@
 
 本项目提供网络功能层(SNF)的核心接口，用于不同角色（AS/GS/SGW）的初始化、安全通信及数据处理。主要功能包括SNF层初始化、认证流程、数据加密/解密、完整性校验等。
 
-当前版本 ***尚未*** 定义切换过程中使用的接口。
-
 其中，库中所定义的安全网关角色（SGW）仅作测试用，测试过程中使用的安全网关详见ldacs-combine项目。
+
+---
+
+## 功能特性
+
+- 多角色支持：初始化和管理AS、GS、SGW实体的SNF层。
+- 安全协议：支持AES加密/解密及多种HMAC算法（MAC长度64/96/128/256位）。
+- 切换处理：实现基站间切换（Handover）的协调与响应。
+- 回调机制：通过回调函数处理认证完成、数据传输、注册失败等事件。
+- 随机数生成：生成至多64位的安全随机数。
 
 ---
 
@@ -163,21 +171,95 @@ int maclen = get_sec_maclen(SEC_MACLEN_96); // 返回12
 
 ---
 
-## 核心 API 详解
+## 回调函数
+
+### 1. `finish_auth` - 认证完成回调
+
+```c
+int8_t (*finish_auth)();
+```
+
+#### 功能描述
+
+- **用途**：由 **AS** 调用，标识认证流程完成。
+- **需包含功能**：
+    - 将 LME状态更新为 `LME_OPEN`。
+
+#### 调用时机
+
+- 当 AS 完成认证后触发。
+
+### 2. `trans_snp` - SNP 数据传输回调
+
+```c
+int8_t (*trans_snp)(uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *buf, size_t buf_len);
+```
+
+#### 功能描述
+
+- **用途**：由 **AS/GS ** 调用，向 SNP 层传递数据。
+- **参数说明**：
+    - `AS_SAC`：发送/接收数据的 AS 对应的 SAC。
+    - `GS_SAC`：关联的 GS 对应的SAC。
+    - `buf`：待传输的数据缓冲区指针。
+    - `buf_len`：数据长度（字节数）。
+
+#### 调用场景
+
+- AS/GS SNF 需将协议数据单元（PDU）传递至 SNP 层时调用。
+
+### 3. `register_snf_fail` - 注册失败回调
+
+```c
+int8_t (*register_snf_fail)(uint16_t AS_SAC);
+```
+
+#### 功能描述
+
+- **用途**：由 **AS/GS ** 调用，处理服务注册失败事件。
+- **应包含功能**：
+    - 清理与失败 AS 关联的 LME 和 DLS 实体资源。
+- **参数说明**：
+    - `AS_SAC`：注册失败的 AS 服务接入点标识符。
+
+#### 调用场景
+
+- SNF注册失败时触发。
+
+### 4. `finish_handover` - 切换完成回调
+
+```c
+int8_t (*finish_handover)(uint16_t AS_SAC, uint16_t GSS_SAC);
+```
+
+#### 功能描述
+
+- **用途**：由 **GS ** 调用，标识切换流程完成。
+- **应包含功能**：
+    - 向源基站（GS Source）发送切换确认（ACK）。
+- **参数说明**：
+    - `AS_SAC`：发生切换的 AS 服务接入点标识符。
+    - `GSS_SAC`：切换前的源 GS 服务接入点标识符。
+
+#### 调用场景
+
+- 当目标 GS 确认切换完成并需通知源基站时触发。
+
+---
+
+## 核心接口
 
 ### 1. 初始化函数
 
 #### AS 初始化
 
 ```c
-void init_as_snf_layer(finish_auth auth_cb, trans_snp snp_cb);
+void init_as_snf_layer(finish_auth finish_auth, trans_snp trans_snp, register_snf_fail register_fail);
 ```
 
-- **参数**:
-    - `auth_cb`: 认证完成回调，类型为 `int8_t (*finish_auth)()`
-    - `snp_cb`:  数据转发回调，类型为 `int8_t (*trans_snp)(uint16_t, uint16_t, uint8_t*, size_t)`
+- **参数**: (见“回调函数”部分)
 
-#### GS 初始化(使用)
+#### GS 初始化
 
 ```c
 void init_gs_snf_layer_unmerged(uint16_t GS_SAC, const char *gsnf_addr, uint16_t gsnf_port, trans_snp trans_snp,
@@ -188,13 +270,16 @@ void init_gs_snf_layer_unmerged(uint16_t GS_SAC, const char *gsnf_addr, uint16_t
     - `GS_SAC`:    地面站 SAC 标识
     - `gsnf_addr`: GSC/网关的 IPv6 地址
     - `gsnf_port`: 网关端口
-    - `snp_cb`:    数据转发回调
+    - (见“回调函数”部分)
 
 ### 2. 资源释放
 
 ```c
 int8_t destory_snf_layer(); // 返回操作结果（见返回码定义）
 ```
+
+- **调用场景**：
+  程序结束时
 
 ### 3. 安全认证流程
 
@@ -204,13 +289,83 @@ int8_t destory_snf_layer(); // 返回操作结果（见返回码定义）
 int8_t snf_LME_AUTH(uint8_t role, uint16_t AS_SAC, uint32_t AS_UA, uint16_t GS_SAC);
 ```
 
+- **调用场景**：
+  AS LME進入LME_AUTH状态后
 - **参数**:
     - `role`:   角色（需为 `ROLE_AS`）
     - `AS_SAC`: 飞机 SAC
     - `AS_UA`:  飞机 UA
     - `GS_SAC`: 目标地面站 SAC
 
-### 4. 数据加密/解密
+### 4. 注册SNF实体
+
+```c
+int8_t register_snf_en(uint8_t role, uint16_t AS_SAC, uint32_t AS_UA, uint16_t GS_SAC);
+```
+
+- **调用场景**：
+  在GS从RA信道接收到Cell Response后注册AS实体
+
+- **参数**:
+    - `role`:   角色（需为 `ROLE_GS`）
+    - `AS_SAC`: 飞机 SAC
+    - `AS_UA`:  飞机 UA
+    - `GS_SAC`: 目标地面站 SAC
+
+### 5. 注销SNF实体
+
+```c
+int8_t unregister_snf_en(uint16_t AS_SAC);
+```
+
+- **调用场景**：
+  AS注销时
+
+- **参数**:
+    - `role`:   角色（需为 `ROLE_GS`）
+    - `AS_SAC`: 飞机 SAC
+
+### 6. 上传SNF报文
+
+```c
+int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_buf, size_t buf_len);
+```
+
+- **调用场景**：
+  SNP上传控制报文时
+
+- **参数**:
+    - `is_valid`:   是否是合法报文
+    - `AS_SAC`: 飞机 SAC
+    - `GS_SAC`: 地面站 SAC
+    - `snp_buf`: 上传SNF数据
+    - `buf_len`: 数据长度
+
+### 7. 目标GS切换响应
+
+```c
+int8_t handover_response(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC, uint16_t GST_SAC);
+```
+
+- **调用场景**：
+  在目标GS接收到源GS的切换提醒时
+
+- **参数**:
+    - `AS_SAC`: 飞机 SAC
+    - `AS_UA`: 飞机 UA
+    - `GSS_SAC`: 源地面站 SAC
+    - `GST_SAC`: 目标地面站 SAC
+
+### 8. 生成随机数
+
+```c
+uint64_t generate_urand(size_t rand_bits_sz);
+```
+
+- **参数**:
+    - `rand_bits_sz`: 生成随机数的比特长度，至多64位
+
+### 9. 数据加密/解密
 
 加密前对原始数据使用PKCS7进行填充，并在解密后取消填充
 
@@ -225,7 +380,7 @@ int8_t snpsub_crypto(uint16_t AS_SAC, uint8_t *in, size_t in_len,
 - **注意**:
     - `out` 缓冲区需由调用者预先分配
 
-### 5. HMAC 计算与验证
+### 10. HMAC 计算与验证
 
 ```c
 // 计算 HMAC
@@ -274,7 +429,7 @@ snpsub_crypto(0x1234, plain, 64, cipher, &cipher_len, true);
 ## 版本
 
 - **保护版本**: `PROTECT_VERSION 1`
-- **最后更新**: 2025/4/15
+- **最后更新**: 2025/4/30
 
 ---
 

@@ -4,7 +4,6 @@
 
 #include "snf.h"
 #include "crypto/authc.h"
-#include "net/net_core.h"
 
 fsm_event_t ld_authc_fsm_events[] = {
     {"LD_AUTHC_A0", NULL, NULL},
@@ -221,6 +220,18 @@ static field_desc gsnf_st_chg_fields[] = {
 };
 struct_desc_t gsnf_st_chg_desc = {"GSNF STATE CHANGE", gsnf_st_chg_fields};
 
+static field_desc gsnf_key_upd_remind_fields[] = {
+    {ft_set, 8, "G_TYP", NULL},
+    {ft_set, 4, "VER", NULL},
+    {ft_set, 12, "AS SAC", NULL},
+    {ft_set, 4, "KEY_TYPE", NULL},
+    {ft_set, 12, "GSS SAC", NULL},
+    {ft_set, 12, "GST SAC", NULL},
+    {ft_pad, 0, "PAD", NULL},
+    {ft_end, 0, NULL, NULL},
+};
+struct_desc_t gsnf_key_upd_remind_desc = {"GSNF KEY UPDATE REMIND", gsnf_key_upd_remind_fields};
+
 
 static field_desc gs_sac_resp_fields[] = {
     {ft_set, 12, "SAC", NULL},
@@ -258,6 +269,21 @@ uint64_t hash_enode(const void *item, uint64_t seed0, uint64_t seed1) {
     return hashmap_sip(&node->AS_SAC, sizeof(uint16_t), seed0, seed1);
 }
 
+struct hashmap *init_enode_map() {
+    return hashmap_new(sizeof(snf_entity_t), 0, 0, 0,
+                       hash_enode, NULL, NULL, NULL);
+}
+
+const void *set_enode(snf_entity_t *en) {
+    if (!en) return NULL;
+
+    const void *ret = hashmap_set(snf_obj.snf_emap, en);
+
+    free(en);
+
+    return ret;
+}
+
 snf_entity_t *get_enode(const uint16_t as_sac) {
     return hashmap_get(snf_obj.snf_emap, &(snf_entity_t){
                            .
@@ -266,9 +292,9 @@ snf_entity_t *get_enode(const uint16_t as_sac) {
     );
 }
 
-bool has_enode_by_sac(const uint16_t as_sac) {
+bool has_enode_by_sac(const uint16_t gs_sac) {
     return hashmap_get(snf_obj.snf_emap, &(snf_entity_t){
-                           . AS_SAC = as_sac,
+                           . AS_SAC = gs_sac,
                        }
            ) != NULL;
 }
@@ -282,22 +308,6 @@ bool has_enode_by_ua(uint32_t target_UA) {
             return TRUE;
     }
     return FALSE;
-}
-
-struct hashmap *init_enode_map() {
-    return hashmap_new(sizeof(snf_entity_t), 0, 0, 0,
-                       hash_enode, NULL, NULL, NULL);
-}
-
-const void *set_enode(snf_entity_t *en) {
-    if (!en) return NULL;
-
-    const void *ret = hashmap_set(snf_obj.snf_emap, en);
-
-    // free_snf_entity(en);
-    free(en);
-
-    return ret;
 }
 
 int8_t delete_enode_by_sac(uint16_t as_sac, int8_t (*clear_func)(snf_entity_t *snf_en)) {
