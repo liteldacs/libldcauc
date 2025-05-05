@@ -35,13 +35,11 @@ IF (SGW_DEVICE)
 ELSEIF (AS_DEVICE OR GS_DEVICE)
     MESSAGE(STATUS "AS/GS Device Compiling...")
     target_link_libraries(${PROJECT_NAME} LINK_PUBLIC piico_ccmu)
-    #    option(USE_PIICO "Enable PIICO" ON)
     target_compile_definitions(${PROJECT_NAME} PRIVATE USE_CRYCARD)
 ELSE ()
     MESSAGE(STATUS "Using GMSSL...")
     target_link_libraries(${PROJECT_NAME} LINK_PUBLIC gmssl)
-    #    option(USE_GMSSL "Enable GMSSL" ON)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE UNUSE_CRYCARD)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_CRYCARD)
 ENDIF ()
 
 find_package(LiteLdacsSdk REQUIRED)
@@ -52,16 +50,23 @@ if (LiteLdacsSdk_FOUND)
 endif ()
 
 
+add_executable(rootkey-export rootkey_export.c)
+target_link_libraries(rootkey-export LINK_PUBLIC gmssl)
+target_include_directories(rootkey-export PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
 find_package(Ldacscrypto REQUIRED)
 if (Ldacscrypto_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC ${Ldacscrypto_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC ldacscrypto::ldacscrypto)
+    target_include_directories(rootkey-export PUBLIC ${Ldacscrypto_INCLUDE_DIRS})
+    target_link_libraries(rootkey-export PUBLIC ldacscrypto::ldacscrypto)
 endif ()
 
 
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES output_name "ldcauc")
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 INSTALL(TARGETS ${PROJECT_NAME} EXPORT LdcaucTargets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+INSTALL(TARGETS rootkey-export RUNTIME DESTINATION bin)
 INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include/ldcauc)
 
 INSTALL(EXPORT LdcaucTargets
@@ -101,7 +106,6 @@ set(SO_PATH /usr/local/ldacs-cauc/lib)
 set(SO_CONFIG_DIR /etc/ld.so.conf.d)
 
 INSTALL(CODE "execute_process(COMMAND sudo sh -c \"echo ${SO_PATH} > ${SO_CONFIG_DIR}/ldacs-cauc.conf\" COMMAND sudo ldconfig )")
-
 message(${CMAKE_INSTALL_PREFIX})
 INSTALL(CODE "
     # 创建目录（包含父目录）
@@ -134,3 +138,4 @@ INSTALL(CODE "
         WORLD_READ WORLD_EXECUTE
     )
 ")
+

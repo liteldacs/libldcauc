@@ -12,6 +12,7 @@
 #pragma pack(1)
 #pragma pack()
 
+
 //l_km_err get_rootkey(KEY_HANDLE *rootkey_handle);
 //
 //void gmssl_kdf(buffer_t *src, KEY_HANDLE *key_handle, size_t key_sz);

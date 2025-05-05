@@ -5,12 +5,12 @@
 #include "crypto/key.h"
 
 static char *get_db_name(ldacs_roles role) {
-//    log_error("%s%s%s", get_home_dir(), BASE_PATH, ROOT_KEY_BIN_PATH);
-    char *buf_dir = calloc(PATH_MAX, sizeof (char ));
+    //    log_error("%s%s%s", get_home_dir(), BASE_PATH, ROOT_KEY_BIN_PATH);
+    char *buf_dir = calloc(PATH_MAX, sizeof(char));
     char *db_name = NULL;
 
     snprintf(buf_dir, PATH_MAX, "%s%s", get_home_dir(), BASE_PATH);
-    if(check_path(buf_dir) != LD_OK) {
+    if (check_path(buf_dir) != LD_OK) {
         free(buf_dir);
         return NULL;
     }
@@ -53,7 +53,7 @@ static char *get_table_name(ldacs_roles role) {
 #ifdef USE_CRYCARD
 /* for AS / SGW */
 static l_km_err key_derive_as_sgw(ldacs_roles role, uint8_t *rand, uint32_t randlen, const char *as_ua,
-                           const char *gs_ua, const char *sgw_ua, KEY_HANDLE *key_aw) {
+                                  const char *gs_ua, const char *sgw_ua, KEY_HANDLE *key_aw) {
     char *db_name = get_db_name(role);
     char *table_name = get_table_name(role);
 
@@ -97,12 +97,13 @@ cleanup:
  *
  */
 static l_km_err key_install(buffer_t *key_ag, const char *as_ua, const char *gs_ua, uint8_t *nonce, uint32_t nonce_len,
-                     KEY_HANDLE *handle) {
+                            KEY_HANDLE *handle) {
     l_km_err err = LD_KM_OK;
 
     char *db_name = get_db_name(LD_GS);
     const char *table_name = get_table_name(LD_GS);
-    if((err = km_install_key(db_name, table_name, key_ag->len, key_ag->ptr, as_ua, gs_ua, nonce_len, nonce))!= LD_KM_OK){
+    if ((err = km_install_key(db_name, table_name, key_ag->len, key_ag->ptr, as_ua, gs_ua, nonce_len, nonce)) !=
+        LD_KM_OK) {
         log_error("Cannot install key.\n");
         goto cleanup;
     }
@@ -153,45 +154,32 @@ l_km_err embed_rootkey(ldacs_roles role, const char *as_ua, const char *sgw_ua) 
     if (role == LD_AS || role == LD_GS) // AS从密码卡导入根密钥
     {
         if ((err = km_rkey_import(db_name, table_name, "rootkey.bin") !=
-                   LD_KM_OK))
-        {
+                   LD_KM_OK)) {
             log_error("AS import rootkey failed\n");
             goto cleanup;
         }
-    }
-    else if (role == LD_SGW) // 网关生成并导出根密钥
+    } else if (role == LD_SGW) // 网关生成并导出根密钥
     {
-//        if (km_rkey_gen_export(as_ua, sgw_ua, ROOT_KEY_LEN, DEFAULT_VALIDATE, db_name, table_name,
-//                               KEY_BIN_PATH))
-//        {
-//            log_error("根密钥生成、保存和导出失败。");
-//        }
-//        if (km_writefile_to_cryptocard(KEY_BIN_PATH, "rootkey.bin") != LD_KM_OK)
-//        {
-//            log_error("Error writing to ccard.");
-//        }
-        goto cleanup;
+        // goto cleanup;
     }
     // 激活as端根密钥
     QueryResult_for_queryid *query_result_as = query_id(db_name, table_name, as_ua, sgw_ua, ROOT_KEY,
                                                         PRE_ACTIVATION);
-    if (query_result_as != NULL)    {
-        if ((err = enable_key(db_name, table_name, query_result_as->ids[0])) != LD_KM_OK)
-        {
+    if (query_result_as != NULL) {
+        if ((err = enable_key(db_name, table_name, query_result_as->ids[0])) != LD_KM_OK) {
             log_error("enable key failed\n");
             goto cleanup;
         }
-    }
-    else    {
+    } else {
         log_error("query failed");
         err = LD_ERR_KM_QUERY; // 查询失败
         goto cleanup;
     }
 
+    log_info("embed OK!");
 cleanup:
     free(db_name);
 #endif
-    log_info("embed OK!");
     return err;
 }
 
@@ -322,7 +310,7 @@ l_km_err as_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_
 #ifdef USE_CRYCARD
     char *db_name = get_db_name(LD_AS);
     const char *table_name = get_table_name(LD_AS);
-    if(km_update_masterkey(db_name, table_name, sgw_ua, gs_s_ua, gs_t_ua, as_ua, nonce->len, nonce->ptr) != LD_KM_OK){
+    if (km_update_masterkey(db_name, table_name, sgw_ua, gs_s_ua, gs_t_ua, as_ua, nonce->len, nonce->ptr) != LD_KM_OK) {
         log_error("Cannot update masterkey");
         err = LD_ERR_KM_UPDATE_SESSIONKEY;
     }
