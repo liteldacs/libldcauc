@@ -74,6 +74,7 @@ static l_km_err key_derive_as_sgw(ldacs_roles role, uint8_t *rand, uint32_t rand
         goto cleanup;
     }
 
+
     /* 派生Kas-gs后，数据库查询 */
     QueryResult_for_queryid *qr_mk = query_id(db_name, table_name, as_ua, sgw_ua, MASTER_KEY_AS_SGW, ACTIVE);
     if (qr_mk->count == 0) {
