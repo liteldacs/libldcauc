@@ -65,7 +65,8 @@ l_err init_server_gs_conn_service(int listen_port) {
         .epoll_fd = core_epoll_create(0, -1),
     };
     init_heap_desc(&conn_service.net_ctx.hd_conns);
-    server_entity_setup(listen_port, &conn_service.net_ctx);
+    server_entity_setup(listen_port, &conn_service.net_ctx,
+                        snf_obj.is_merged == TRUE ? LD_TCPV6_SERVER : LD_TCP_SERVER);
     pthread_create(&conn_service.service_th, NULL, net_setup, &conn_service.net_ctx);
     pthread_join(conn_service.service_th, NULL);
     return LD_OK;
