@@ -122,6 +122,8 @@ void init_gs_snf_layer_unmerged(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_
  */
 void init_sgw_snf_layer(uint16_t listen_port);
 
+void init_sgw_snf_layer_unmerged(uint16_t listen_port);
+
 /**
  * \brief  清理SNF层数据并释放对应内存
  * @return 错误码

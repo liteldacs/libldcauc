@@ -236,7 +236,9 @@ l_err recv_gsg(basic_conn_t *bc) {
     gs_propt_t *mlt_ld = (gs_propt_t *) bc;
     log_buf(LOG_INFO, "RECV GSG", mlt_ld->bc.read_pkt.ptr, mlt_ld->bc.read_pkt.len);
     switch ((*mlt_ld->bc.read_pkt.ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN))) {
-        //        case GS_SAC_RQST:
+        case GS_INITIAL_MSG:
+            log_error("???????????????????");
+            break;
         //        case GS_SAC_RESP: {
         //            gsg_sac_pkt_t *gsnf_sac_pkg;
         //            if (parse_gsg_sac_pkt(&mlt_ld->bc->read_pkt, &gsnf_sac_pkg) != LD_OK) {

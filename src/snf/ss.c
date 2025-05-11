@@ -9,6 +9,8 @@
 #include "crypto/key.h"
 #include <ld_santilizer.h>
 
+#include "gsc_conn.h"
+
 
 /**
  * 生成认证过程第一条报文AUC_RQST
@@ -250,12 +252,21 @@ l_err finish_auc(void *args) {
                             }, &gs_key_trans_desc, "GS KEY"
     );
 
-    gs_propt_node_t *save = get_conn_enode(as_man->CURR_GS_SAC);
-    if (save && save->propt->bc.opt->send_handler(&save->propt->bc, &(gsnf_pkt_cn_t){
-                                                      GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
-                                                      sdu
-                                                  }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
-        )) {
+    basic_conn_t *bc;
+    if (snf_obj.is_merged == FALSE) {
+        gs_propt_node_t *save = get_conn_enode(as_man->CURR_GS_SAC);
+        if (!save) return LD_ERR_NULL;
+        bc = &save->propt->bc;
+    } else {
+        gsc_propt_t *save = get_gsc_conn(as_man->CURR_GS_SAC);
+        if (!save) return LD_ERR_NULL;
+        bc = &save->bc;
+    }
+    if (!bc || bc->opt->send_handler(bc, &(gsnf_pkt_cn_t){
+                                         GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
+                                         sdu
+                                     }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
+        ) != LD_OK) {
         log_warn("SGW send GS key failed");
         free_buffer(sdu);
         return LD_ERR_INTERNAL;
@@ -357,11 +368,20 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man) {
                                 .nonce = as_man->shared_random
                             }, &gs_key_trans_desc, "GS KEY"
     );
-    gs_propt_node_t *save = get_conn_enode(key_upd_resp.SAC_dst);
-    if (!save || save->propt->bc.opt->send_handler(&save->propt->bc, &(gsnf_pkt_cn_t){
-                                                       GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
-                                                       sdu
-                                                   }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
+    basic_conn_t *bc;
+    if (snf_obj.is_merged == FALSE) {
+        gs_propt_node_t *save = get_conn_enode(as_man->CURR_GS_SAC);
+        if (!save) return LD_ERR_NULL;
+        bc = &save->propt->bc;
+    } else {
+        gsc_propt_t *save = get_gsc_conn(as_man->CURR_GS_SAC);
+        if (!save) return LD_ERR_NULL;
+        bc = &save->bc;
+    }
+    if (!bc || bc->opt->send_handler(bc, &(gsnf_pkt_cn_t){
+                                         GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
+                                         sdu
+                                     }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
         )) {
         log_warn("SGW send GS key failed");
         free_buffer(sdu);

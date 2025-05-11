@@ -33,7 +33,7 @@ typedef struct gs_conn_service_s {
     gs_propt_t *sgw_conn; // GS -> SGW
 } gs_conn_service_t;
 
-extern gs_conn_service_t conn_service;
+extern gs_conn_service_t gs_conn_service;
 
 l_err init_client_gs_conn_service(char *remote_addr, int remote_port, int local_port,
                                   l_err (*recv_handler)(basic_conn_t *));
