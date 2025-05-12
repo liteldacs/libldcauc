@@ -255,9 +255,16 @@ int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_
                         type = GS_SNF_DOWNLOAD;
                     }
                 }
-                gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsg_pkt_t){
-                                                                   type, as_man->AS_SAC, to_trans_buf
-                                                               }, &gsg_pkt_desc, NULL, NULL);
+                if (as_man->gsnf_count++ == 0) {
+                    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsg_ini_pkt_t){
+                                                                       type, as_man->AS_SAC, as_man->AS_UA, GS_SAC,
+                                                                       to_trans_buf
+                                                                   }, &gsg_pkt_desc, NULL, NULL);
+                } else {
+                    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsg_pkt_t){
+                                                                       type, as_man->AS_SAC, to_trans_buf
+                                                                   }, &gsg_ini_pkt_desc, NULL, NULL);
+                }
             }
         } else {
             to_trans_buf = in_buf;
@@ -273,8 +280,7 @@ int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_
                 if (as_man->gsnf_count++ == 0) {
                     gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsnf_pkt_cn_ini_t){
                                                                        GSNF_INITIAL_AS, DEFAULT_GSNF_VERSION, AS_SAC,
-                                                                       GS_SAC,
-                                                                       as_man->AS_UA, ELE_TYP_F, to_trans_buf
+                                                                       as_man->AS_UA, GS_SAC, ELE_TYP_F, to_trans_buf
                                                                    }, &gsnf_pkt_cn_ini_desc, NULL, NULL);
                 } else {
                     gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsnf_pkt_cn_t){

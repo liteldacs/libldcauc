@@ -146,15 +146,17 @@ static field_desc failed_message_fields[] = {
 
 struct_desc_t failed_message_desc = {"FAILED_MESSGAE", failed_message_fields};
 
-static field_desc gsg_sac_pkt_fields[] = {
+static field_desc gsg_ini_pkt_fields[] = {
     {ft_set, 4, "TYPE", NULL},
-    {ft_set, 28, "UA", NULL},
+    {ft_set, 12, "AS_SAC", NULL},
+    {ft_set, 28, "AS_UA", NULL},
+    {ft_set, 12, "GS_SAC", NULL},
     {ft_pad, 0, "PAD", NULL},
     {ft_dl_str, 0, "SDU", NULL},
     {ft_end, 0, NULL, NULL},
 };
 
-struct_desc_t gsg_sac_pkt_desc = {"GSG SAC PKT", gsg_sac_pkt_fields};
+struct_desc_t gsg_ini_pkt_desc = {"GSG SAC PKT", gsg_ini_pkt_fields};
 
 static field_desc gsg_pkt_fields[] = {
     {ft_set, 4, "TYPE", NULL},
@@ -188,8 +190,8 @@ static field_desc gsnf_pkt_cn_ini_fields[] = {
     {ft_set, 8, "G_TYP", NULL},
     {ft_set, 4, "VER", NULL},
     {ft_set, 12, "AS SAC", NULL},
-    {ft_set, 12, "GS SAC", NULL},
     {ft_set, 28, "AS UA", NULL},
+    {ft_set, 12, "GS SAC", NULL},
     {ft_set, 4, "ELE_TYPE", NULL},
     {ft_pad, 0, "PAD", NULL},
     {ft_dl_str, 0, "SDU", NULL},

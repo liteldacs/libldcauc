@@ -46,7 +46,7 @@ typedef enum {
 } GSNF_TYPE;
 
 typedef enum {
-    GS_INITIAL_MSG = 1,
+    GS_INITIAL_MSG = 3,
     GS_SNF_UPLOAD,
     GS_SNF_DOWNLOAD,
     GS_KEY_TRANS,
@@ -226,9 +226,11 @@ typedef struct failed_message_s {
 
 typedef struct gsg_sac_pkt_s {
     uint8_t TYPE;
-    uint32_t UA;
+    uint16_t AS_SAC;
+    uint32_t AS_UA;
+    uint16_t GS_SAC;
     buffer_t *sdu;
-} gsg_sac_pkt_t;
+} gsg_ini_pkt_t;
 
 /**
  * TODO： 12.17需改： 除了前两条报文单独解析外，其他报文都是一个head + payload的形式，head共用一个描述，payload各自不同，switch的时候把他们放一起，查出来SAC后对应的as_man后再搞一次switch
@@ -256,8 +258,8 @@ typedef struct gsnf_pkt_cn_ini_s {
     uint8_t G_TYP;
     uint8_t VER;
     uint16_t AS_SAC;
-    uint16_t GS_SAC;
     uint32_t UA;
+    uint16_t GS_SAC;
     uint8_t ELE_TYPE;
     buffer_t *sdu;
 } gsnf_pkt_cn_ini_t;
@@ -308,7 +310,7 @@ extern struct_desc_t key_upd_resp_desc;
 extern struct_desc_t sn_session_est_rqst_desc;
 extern struct_desc_t sn_session_est_resp_desc;
 extern struct_desc_t failed_message_desc;
-extern struct_desc_t gsg_sac_pkt_desc;
+extern struct_desc_t gsg_ini_pkt_desc;
 extern struct_desc_t gsg_pkt_desc;
 extern struct_desc_t gsg_as_exit_desc;
 extern struct_desc_t gsnf_pkt_cn_desc;

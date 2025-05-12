@@ -22,8 +22,8 @@ static gsg_pkt_t *init_gsg_pkg(size_t pdu_len) {
     return gsnf_pkg;
 }
 
-static gsg_sac_pkt_t *init_gsg_sac_pkg(size_t pdu_len) {
-    gsg_sac_pkt_t *gsnf_sac = calloc(1, sizeof(gsg_sac_pkt_t));
+static gsg_ini_pkt_t *init_gsg_sac_pkg(size_t pdu_len) {
+    gsg_ini_pkt_t *gsnf_sac = calloc(1, sizeof(gsg_ini_pkt_t));
     gsnf_sac->sdu = init_buffer_ptr(pdu_len - GSG_SAC_HEAD_LEN);
     return gsnf_sac;
 }
@@ -35,7 +35,7 @@ static void free_gsg_pkg(gsg_pkt_t *gsnf_pkg) {
     free(gsnf_pkg);
 }
 
-static void free_gsg_sac_pkg(gsg_sac_pkt_t *gsnf_sac) {
+static void free_gsg_sac_pkg(gsg_ini_pkt_t *gsnf_sac) {
     if (gsnf_sac->sdu) {
         free_buffer(gsnf_sac->sdu);
     }
@@ -43,16 +43,16 @@ static void free_gsg_sac_pkg(gsg_sac_pkt_t *gsnf_sac) {
 }
 
 
-static l_err parse_gsg_sac_pkt(buffer_t *pdu, gsg_sac_pkt_t **gsnf_pkg_ptr) {
+static l_err parse_gsg_sac_pkt(buffer_t *pdu, gsg_ini_pkt_t **gsnf_pkg_ptr) {
     pb_stream gsnf_sac_pbs;
     zero(&gsnf_sac_pbs);
     *gsnf_pkg_ptr = init_gsg_sac_pkg(pdu->len);
-    gsg_sac_pkt_t *gsnf_sac_pkg = *gsnf_pkg_ptr;
+    gsg_ini_pkt_t *gsnf_sac_pkg = *gsnf_pkg_ptr;
 
 
     init_pbs(&gsnf_sac_pbs, pdu->ptr, pdu->len, "GSNF IN");
 
-    if (!in_struct(gsnf_sac_pkg, &gsg_sac_pkt_desc, &gsnf_sac_pbs, NULL)) {
+    if (!in_struct(gsnf_sac_pkg, &gsg_ini_pkt_desc, &gsnf_sac_pbs, NULL)) {
         log_error("Cannot parse gsnf pdu");
         return LD_ERR_INTERNAL;
     }
