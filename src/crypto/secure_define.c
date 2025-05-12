@@ -3,17 +3,10 @@
 //
 
 #include "crypto/secure_core.h"
-#ifdef  UNUSE_CRYCARD
-#include <gmssl/rand.h>
-#endif
 
 /* TODO: 处理一下和km_src的关系 */
 void generate_rand(uint8_t *rand, size_t len) {
-#ifdef  USE_CRYCARD
     km_generate_random(rand, len);
-#elif UNUSE_CRYCARD
-    rand_bytes(rand, len);
-#endif
 }
 
 /* generate a rand int, max size is 64bits (8 bytes) */

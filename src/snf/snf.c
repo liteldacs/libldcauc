@@ -137,13 +137,7 @@ int8_t clear_snf_en(snf_entity_t *snf_en) {
     if (snf_en->shared_random != NULL) { free_buffer(snf_en->shared_random); }
     if (snf_en->key_as_gs_b != NULL) { free_buffer(snf_en->key_as_gs_b); }
 
-#ifdef UNUSE_CRYCARD
-    if (snf_en->key_as_sgw_r_h != NULL) { free_buffer(snf_en->key_as_sgw_r_h); }
-    if (snf_en->key_as_sgw_s_h != NULL) { free_buffer(snf_en->key_as_sgw_s_h); }
-    if (snf_en->key_as_gs_h != NULL) { free_buffer(snf_en->key_as_gs_h); }
-    if (snf_en->key_session_en_h != NULL) { free_buffer(snf_en->key_session_en_h); }
-    if (snf_en->key_session_mac_h != NULL) { free_buffer(snf_en->key_session_mac_h); }
-#endif
+
     return LDCAUC_OK;
 }
 
