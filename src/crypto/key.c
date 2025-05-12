@@ -130,9 +130,11 @@ l_km_err embed_rootkey(ldacs_roles role, const char *as_ua, const char *sgw_ua) 
 
     char *db_name = get_db_name(role);
     const char *table_name = get_table_name(role);
+    char key_name[64] = {0};
+    snprintf(key_name, 64, "%s_rootkey.bin", as_ua);
     if (role == LD_AS || role == LD_GS) // AS从密码卡导入根密钥
     {
-        if ((err = km_rkey_import(db_name, table_name, "rootkey.bin") !=
+        if ((err = km_rkey_import(db_name, table_name, key_name) !=
                    LD_KM_OK)) {
             log_error("AS import rootkey failed\n");
             goto cleanup;
