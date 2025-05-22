@@ -214,6 +214,7 @@ l_err recv_auc_key_exec(buffer_t *buf, snf_entity_t *as_man) {
         return LD_ERR_INVALID_MAC;
     }
 
+
     if ((err = change_state(&as_man->auth_fsm, LD_AUTHC_EV_DEFAULT,
                             &(fsm_event_data_t){&ld_authc_fsm_events[LD_AUTHC_G2], as_man}))) {
         log_error("cant change state correctly, %d", err);
@@ -370,18 +371,20 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man) {
     );
     basic_conn_t *bc;
     if (snf_obj.is_merged == FALSE) {
-        gs_propt_node_t *save = get_conn_enode(as_man->CURR_GS_SAC);
+        log_warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! => %d", key_upd_resp.SAC_dst);
+        gs_propt_node_t *save = get_conn_enode(key_upd_resp.SAC_dst);
         if (!save) return LD_ERR_NULL;
         bc = &save->propt->bc;
+        as_man->gs_conn = save->propt;
     } else {
-        gsc_propt_t *save = get_gsc_conn(as_man->CURR_GS_SAC);
+        gsc_propt_t *save = get_gsc_conn(key_upd_resp.SAC_dst);
         if (!save) return LD_ERR_NULL;
         bc = &save->bc;
     }
     if (!bc || bc->opt->send_handler(bc, &(gsnf_pkt_cn_t){
                                          GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
                                          sdu
-                                     }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
+                                     }, &gsnf_pkt_cn_desc, NULL, NULL
         )) {
         log_warn("SGW send GS key failed");
         free_buffer(sdu);

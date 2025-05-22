@@ -175,6 +175,25 @@ static field_desc gsg_as_exit_fields[] = {
 };
 struct_desc_t gsg_as_exit_desc = {"GSNF STATE CHANGE", gsg_as_exit_fields};
 
+static field_desc gsg_ho_req_fields[] = {
+    {ft_set, 4, "TYPE", NULL},
+    {ft_set, 12, "AS SAC", NULL},
+    {ft_set, 12, "GSS SAC", NULL},
+    {ft_set, 12, "GST SAC", NULL},
+    {ft_pad, 0, "PAD", NULL},
+    {ft_end, 0, NULL, NULL},
+};
+struct_desc_t gsg_ho_req_desc = {"GSNF HO REQUEST", gsg_ho_req_fields};
+
+static field_desc gsg_ho_cplt_fields[] = {
+    {ft_set, 4, "TYPE", NULL},
+    {ft_set, 12, "AS SAC", NULL},
+    {ft_set, 12, "GS SAC", NULL},
+    {ft_pad, 0, "PAD", NULL},
+    {ft_end, 0, NULL, NULL},
+};
+struct_desc_t gsg_ho_cplt_desc = {"GSNF HO COMPLETE", gsg_ho_cplt_fields};
+
 static field_desc gsnf_pkt_cn_fields[] = {
     {ft_set, 8, "G_TYP", NULL},
     {ft_set, 4, "VER", NULL},

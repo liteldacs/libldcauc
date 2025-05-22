@@ -77,12 +77,13 @@ typedef int8_t (*trans_snp)(uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *buf, size
 typedef int8_t (*register_snf_fail)(uint16_t AS_SAC);
 
 /**
-* @brief 用于GS，Handover完成回调，应包含功能：1. 向源基站GS Source发送 ACK
+* @brief 用于GST，Handover完成回调，应包含功能：1. 向源基站GS Source发送 ACK
  * @param[in] AS_SAC 进行切换的`AS`对应的SAC
+ * @param AS_UA 进行切换的`AS`对应的UA
  * @param[in] GSS_SAC 该`AS`切换前的`GS`对应的SAC
  * @return 错误码
  */
-typedef int8_t (*finish_handover)(uint16_t AS_SAC, uint16_t GSS_SAC);
+typedef int8_t (*gst_ho_complete_key)(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC);
 
 /**
  * \brief  AS初始化SNF层
@@ -95,26 +96,26 @@ void init_as_snf_layer(finish_auth finish_auth, trans_snp trans_snp, register_sn
 /**
  * \brief  GS初始化SNF层(合并GSC)
  * @param[in] GS_SAC        GS SAC
- * @param[in] gsnf_addr     GSC/网关IPv6地址
+ * @param[in] gsnf_addr     GSC IPv6地址
  * @param[in] gsnf_local_port
  * @param[in] trans_snp     LME->SNP 回调函数
  * @param[in] register_fail 注册失败回调函数
- * @param[in] finish_ho     完成Handover 回调函数
+ * @param[in] gst_ho_complete_key     完成Handover 回调函数
  */
 void init_gs_snf_layer(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_remote_port, uint16_t gsnf_local_port,
-                       trans_snp trans_snp, register_snf_fail register_fail, finish_handover finish_ho);
+                       trans_snp trans_snp, register_snf_fail register_fail, gst_ho_complete_key gst_ho_complete_key);
 
 /**
- * \brief  GS初始化SNF层(未合并GSC)
+ * \brief  GS初始化SNF层（未合并GSC）
  * @param[in] GS_SAC        GS SAC
- * @param[in] gsnf_addr     GSC/网关IPv6地址
+ * @param[in] gsnf_addr     网关IPv4地址
  * @param[in] gsnf_local_port
  * @param[in] trans_snp     LME->SNP 回调函数
  * @param[in] register_fail 注册失败回调函数
  * @param[in] finish_ho     完成Handover 回调函数
  */
 void init_gs_snf_layer_unmerged(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_remote_port, uint16_t gsnf_local_port,
-                                trans_snp trans_snp, register_snf_fail register_fail, finish_handover finish_ho);
+                                trans_snp trans_snp, register_snf_fail register_fail, gst_ho_complete_key finish_ho);
 
 /**
  * \brief  网关初始化SNF层
@@ -122,6 +123,10 @@ void init_gs_snf_layer_unmerged(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_
  */
 void init_sgw_snf_layer(uint16_t listen_port);
 
+/**
+ * \brief  网关初始化SNF层（未合并GSC）
+ * @param[in] listen_port     监听端口
+ */
 void init_sgw_snf_layer_unmerged(uint16_t listen_port);
 
 /**
@@ -160,7 +165,7 @@ int8_t register_snf_en(uint8_t role, uint16_t AS_SAC, uint32_t AS_UA, uint16_t G
 int8_t unregister_snf_en(uint16_t AS_SAC);
 
 /**
- * \brief LME向SNF上传控制数据
+ * \brief 用于AS/GS, LME向SNF上传控制数据
  * 当LME通过SN原语收到控制数据后，通过此函数触发对应SNF功能
  * @param[in] is_valid  SNP报文是否有效
  * @param[in] AS_SAC    AS SAC
@@ -172,14 +177,30 @@ int8_t unregister_snf_en(uint16_t AS_SAC);
 int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_buf, size_t buf_len);
 
 /**
- * \brief Handover响应，应在目标GS接收到源GS的切换提醒时调用
- * @param[in] AS_SAC 切换`AS`对应的SAC
- * @param[in] AS_UA 切换`AS`对应的UA
+ * 源GS向地面部分通告Handover请求
+ * @param[in] AS_SAC AS SAC
+ * @param[in] GSS_SAC 源GS SAC
+ * @param[in] GST_SAC 目的GS SAC
+ * @return 错误码
+ */
+int8_t gss_handover_request_trigger(uint16_t AS_SAC, uint16_t GSS_SAC, uint16_t GST_SAC);
+
+/**
+ * \brief 目的GS，Handover响应，应在目标GS接收到源GS的切换提醒时调用
+ * @param[in] AS_SAC `AS`对应的SAC
+ * @param[in] AS_UA `AS`对应的UA
  * @param[in] GSS_SAC 源`GS`对应的SAC
  * @param[in] GST_SAC 目标`GS`对应的SAC
  * @return 错误码
  */
-int8_t handover_response(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC, uint16_t GST_SAC);
+int8_t gst_handover_request_handle(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC, uint16_t GST_SAC);
+
+/**
+ * 目的GS完成切换，向网关发送HO Complete
+ * @param[in] AS_SAC AS SAC
+ * @return 错误码
+ */
+int8_t gst_handover_complete(uint16_t AS_SAC);
 
 /**
  * \brief 产生至多64位随机数

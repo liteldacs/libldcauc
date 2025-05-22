@@ -16,8 +16,8 @@ l_err delete_conn_enode_by_connptr(gs_propt_t *ptr, int8_t (*clear_func)(gs_prop
 
 gs_conn_service_t gs_conn_service = {
     .conn_defines = {
-        {"127.0.0.1", 55560, 4000},
-        // {"127.0.0.1", 55560, 4001},
+        {"127.0.0.1", 55560, 16},
+        {"127.0.0.1", 55565, 17},
         {NULL, 0, 0}
     },
 };
@@ -150,7 +150,6 @@ l_err set_conn_enode(gs_propt_node_t *en) {
     if (!en) return LD_ERR_NULL;
 
     const void *ret = hashmap_set(gs_conn_service.conn_map, en);
-    /* !!!Do not free the previous entity !!! */
     free(en);
     return LD_OK;
 }

@@ -16,18 +16,22 @@ static char *get_db_name(ldacs_roles role) {
     }
 
     switch (role) {
-        case LD_AS:
+        case LD_AS: {
             db_name = AS_DB_NAME;
             break;
-        case LD_GS:
+        }
+        case LD_GS: {
             db_name = GS_DB_NAME;
             break;
-        case LD_SGW:
+        }
+        case LD_SGW: {
             db_name = SGW_DB_NAME;
             break;
-        default:
+        }
+        default: {
             free(buf_dir);
             return NULL;
+        }
     }
     snprintf(buf_dir, PATH_MAX, "%s%s%s", get_home_dir(), BASE_PATH, db_name);
 
