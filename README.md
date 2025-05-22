@@ -24,21 +24,30 @@
 
 ⚠️ **注意**：本项目要求 CMake 最低版本为 **3.20**。如果构建失败，请先检查 CMake 版本！
 
+⚠️ **注意**：在执行apt upgrade之前需要评估其他项目依赖升级的影响，否则手动安装本项目依赖！
+
 ### 依赖安装
 
 本项目依赖多个外部库以及内部项目，须按如下顺序安装依赖。
 
-#### 1. 安装libyaml、libevent、uthash、libcjson、libsqlite3 (Ubuntu)
+#### 1. 安装libyaml、libevent、uthash、libsqlite3 (Ubuntu)
 
 ```shell
 sudo apt update && sudo apt upgrade
-sudo apt install libyaml-dev libevent-dev uthash-dev libcjson-dev libsqlite3-dev
+sudo apt install libyaml-dev libevent-dev uthash-dev libsqlite3-dev
 ```
 
-#### 2. 拉取并安装base64
+#### 2. 拉取并安装base64 及 cjson
 
 ```shell
+#base64
 git clone https://github.com/aklomp/base64.git
+cd base64 && mkdir build && cd build
+cmake ..
+make -j12 && sudo make install
+
+#cjson
+git clone https://github.com/DaveGamble/cJSON
 cd base64 && mkdir build && cd build
 cmake ..
 make -j12 && sudo make install
@@ -49,7 +58,7 @@ make -j12 && sudo make install
 - **对于尚未使用密码卡的环境**
 
 ```shell
-git clone https://github.com/guanzhi/GmSSL.git
+git clone https://github.com/thirdxiaozhu/GmSSL-liteldacs
 cd GmSSL && mkdir build && cd build
 cmake .. 
 && make -j12 && sudo make install
@@ -229,7 +238,7 @@ int8_t (*register_snf_fail)(uint16_t AS_SAC);
 ### 4. `finish_handover` - 切换完成回调
 
 ```c
-int8_t (*finish_handover)(uint16_t AS_SAC, uint16_t GSS_SAC);
+int8_t (*gst_ho_complete_key)(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC);
 ```
 
 #### 功能描述
@@ -238,8 +247,9 @@ int8_t (*finish_handover)(uint16_t AS_SAC, uint16_t GSS_SAC);
 - **应包含功能**：
     - 向源基站（GS Source）发送切换确认（ACK）。
 - **参数说明**：
-    - `AS_SAC`：发生切换的 AS 服务接入点标识符。
-    - `GSS_SAC`：切换前的源 GS 服务接入点标识符。
+    - `AS_SAC`：发生切换的 AS SAC。
+    - `AS_UA`：发生切换的 AS GS。
+    - `GSS_SAC`：切换前的源 GS SAC。
 
 #### 调用场景
 
