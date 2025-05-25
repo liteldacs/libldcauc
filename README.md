@@ -24,7 +24,7 @@
 
 ⚠️ **注意**：本项目要求 CMake 最低版本为 **3.20**。如果构建失败，请先检查 CMake 版本！
 
-⚠️ **注意**：在执行apt upgrade之前需要评估其他项目依赖升级的影响，否则手动安装本项目依赖！
+⚠️ **注意**：在执行apt upgrade之前需要***谨慎评估环境中其他项目依赖的升级影响***，若影响巨大应手动安装本项目所有依赖！
 
 ### 依赖安装
 
@@ -38,6 +38,8 @@ sudo apt install libyaml-dev libevent-dev uthash-dev libsqlite3-dev
 ```
 
 #### 2. 拉取并安装base64 及 cjson
+
+cjson不可以使用apt默认版本，依赖版本：v1.7.18及以上
 
 ```shell
 #base64
@@ -282,10 +284,55 @@ void init_gs_snf_layer_unmerged(uint16_t GS_SAC, const char *gsnf_addr, uint16_t
     - `gsnf_port`: 网关端口
     - (见“回调函数”部分)
 
+- **使用样例**：
+
+样例文件：src/layer/lme/lme.c
+
+```c 
+// 初始化LME层
+l_err make_lme_layer() {
+    switch (config.role) {
+        case LD_AS:
+        case LD_GS: {
+            switch (config.role) {
+                case LD_AS: {
+                    init_lme_fsm(&lme_layer_objs, LME_FSCANNING);
+                    lme_layer_objs.lme_as_man = init_as_man(DEFAULT_SAC, config.UA, DEFAULT_SAC);
+                    
+                    // 调用AS SNF 初始化函数
+                    init_as_snf_layer(as_finish_auth_func, trans_snp_data, register_snf_failed);
+                    
+                    break;
+                }
+                case LD_GS: {
+                    ...
+                    init_gs_snf_layer_unmerged(config.GS_SAC, config.gsnf_addr, config.gsnf_remote_port,
+                                                     config.gsnf_local_port,
+                                                     trans_snp_data, register_snf_failed, gst_handover_complete_key);
+
+                    init_lme_fsm(&lme_layer_objs, LME_OPEN);
+
+                    ...
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+            init_lme_mms(&lme_layer_objs);
+            init_lme_rms(&lme_layer_objs);
+            break;
+        }
+        ...
+    }
+    return LD_OK;
+}
+```
+
 ### 2. 资源释放
 
 ```c
-int8_t destory_snf_layer(); // 返回操作结果（见返回码定义）
+int8_t destory_snf_layer(); 
 ```
 
 - **调用场景**：
@@ -306,6 +353,32 @@ int8_t snf_LME_AUTH(uint8_t role, uint16_t AS_SAC, uint32_t AS_UA, uint16_t GS_S
     - `AS_SAC`: 飞机 SAC
     - `AS_UA`:  飞机 UA
     - `GS_SAC`: 目标地面站 SAC
+- **使用样例**
+
+样例文件：src/layer/lme/lme.c
+
+```c
+l_err entry_LME_AUTH(void *args) {
+    l_err err;
+
+    do {
+        //change MAC state into MAC_AUTH
+        //change SNP state into SNP_AUTH
+        // Tell RCU the state of LME is AUTH 
+        ...
+
+        if (snf_LME_AUTH(
+                config.role,
+                lme_layer_objs.lme_as_man->AS_SAC,
+                lme_layer_objs.lme_as_man->AS_UA,
+                lme_layer_objs.lme_as_man->AS_CURR_GS_SAC
+            ) != LDCAUC_OK) {
+            err = LD_ERR_INTERNAL;
+        }
+    } while (0);
+    return err;
+}
+```
 
 ### 4. 注册SNF实体
 
@@ -317,10 +390,38 @@ int8_t register_snf_en(uint8_t role, uint16_t AS_SAC, uint32_t AS_UA, uint16_t G
   在GS从RA信道接收到Cell Response后注册AS实体
 
 - **参数**:
-    - `role`:   角色（需为 `ROLE_GS`）
+    - `role`:   角色（必须传入枚举值 `ROLE_GS`）
     - `AS_SAC`: 飞机 SAC
     - `AS_UA`:  飞机 UA
     - `GS_SAC`: 目标地面站 SAC
+- **使用样例**
+
+样例文件：src/layer/lme/lme_mms.c
+
+```c++
+void M_SAPR_cb(ld_prim_t *prim) {
+    if (prim->prim_seq == MAC_RACH_IND) {
+        switch (prim->prim_obj_typ) {
+        //判断是否为CELL REQUEST
+            case R_TYP_CR: {
+                ra_cell_rqst_t *cr = data_struct;
+                //初始化当前AS的LME实体
+                if (has_lme_as_enode(sac) == FALSE) {
+                    set_lme_as_enode(init_as_man(sac, cr->UA, lme_layer_objs.GS_SAC));
+                }
+                //使用本接口，初始化AS的SNF实体
+                if(register_snf_en(LD_GS, sac, cr->UA, lme_layer_objs.GS_SAC) != LDCAUC_OK){
+                    log_warn("Can not register snf");
+                    break;
+                }
+                //DLS OPEN
+                ...
+        }
+        ...  
+    } 
+    ...
+}
+```
 
 ### 5. 注销SNF实体
 
@@ -329,10 +430,9 @@ int8_t unregister_snf_en(uint16_t AS_SAC);
 ```
 
 - **调用场景**：
-  AS注销时
+  AS注销时，由GS LME调用
 
 - **参数**:
-    - `role`:   角色（需为 `ROLE_GS`）
     - `AS_SAC`: 飞机 SAC
 
 ### 6. 上传SNF报文
@@ -350,11 +450,42 @@ int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_
     - `GS_SAC`: 地面站 SAC
     - `snp_buf`: 上传SNF数据
     - `buf_len`: 数据长度
+- **使用样例**
 
-### 7. 目标GS切换响应
+样例文件：src/layer/lme/lme.c
+
+```c++
+void SN_SAPD_L_cb(ld_prim_t *prim) {
+    switch (prim->prim_seq) {
+        case SN_DATA_IND: {
+            orient_sdu_t *osdu = prim->prim_objs;
+            upload_snf(prim->prim_obj_typ == VER_PASS, osdu->AS_SAC, osdu->GS_SAC, osdu->buf->ptr, osdu->buf->len);
+            break;
+        }
+        default:
+            break;
+    }
+}
+```
+
+### 7. 源GS切换触发
+
+```c++
+int8_t gss_handover_request_trigger(uint16_t AS_SAC, uint16_t GSS_SAC, uint16_t GST_SAC);
+```
+
+- **调用场景**：
+  源GS向地面部分通告Handover请求
+
+- **参数**:
+    - `AS_SAC`: 飞机 SAC
+    - `GSS_SAC`: 源地面站 SAC
+    - `GST_SAC`: 目标地面站 SAC
+
+### 8. 目标GS切换响应
 
 ```c
-int8_t handover_response(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC, uint16_t GST_SAC);
+int8_t gst_handover_request_handle(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC, uint16_t GST_SAC);
 ```
 
 - **调用场景**：
@@ -366,7 +497,19 @@ int8_t handover_response(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC, uint
     - `GSS_SAC`: 源地面站 SAC
     - `GST_SAC`: 目标地面站 SAC
 
-### 8. 生成随机数
+### 9. 目的GS完成切换
+
+```c++
+int8_t gst_handover_complete(uint16_t AS_SAC);
+```
+
+- **调用场景**：
+  目的GS完成切换，向网关发送HO Complete
+
+- **参数**:
+    - `AS_SAC`: 飞机 SAC
+
+### 10. 生成随机数
 
 ```c
 uint64_t generate_urand(size_t rand_bits_sz);
@@ -375,7 +518,7 @@ uint64_t generate_urand(size_t rand_bits_sz);
 - **参数**:
     - `rand_bits_sz`: 生成随机数的比特长度，至多64位
 
-### 9. 数据加密/解密
+### 11. 数据加密/解密
 
 加密前对原始数据使用PKCS7进行填充，并在解密后取消填充
 
@@ -390,7 +533,7 @@ int8_t snpsub_crypto(uint16_t AS_SAC, uint8_t *in, size_t in_len,
 - **注意**:
     - `out` 缓冲区需由调用者预先分配
 
-### 10. HMAC 计算与验证
+### 12. HMAC 计算与验证
 
 ```c
 // 计算 HMAC
@@ -399,30 +542,6 @@ int8_t snpsub_calc_hmac(uint16_t AS_SAC, uint8_t SEC,
 
 // 验证 HMAC
 int8_t snpsub_vfy_hmac(uint16_t AS_SAC, uint8_t SEC, uint8_t *snp_pdu, size_t pdu_len);
-```
-
----
-
-## 使用示例
-
-### AS 初始化示例
-
-```c
-// 定义回调
-int8_t on_auth_finish() { /* 处理认证完成 */ }
-int8_t on_trans_snp(uint16_t as_sac, uint16_t gs_sac, uint8_t *buf, size_t len) { /* 转发数据 */ }
-
-// 初始化
-init_as_snf_layer(on_auth_finish, on_trans_snp);
-snf_LME_AUTH(ROLE_AS, 0x1234, 0xABCD, 0x5678);
-```
-
-### 数据加密示例
-
-```c
-uint8_t plain[64], cipher[128];
-size_t cipher_len;
-snpsub_crypto(0x1234, plain, 64, cipher, &cipher_len, true);
 ```
 
 ---
