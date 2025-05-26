@@ -303,9 +303,10 @@ int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_
 }
 
 int8_t gss_handover_request_trigger(uint16_t AS_SAC, uint16_t GSS_SAC, uint16_t GST_SAC) {
-    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsg_ho_req_t){
-                                                       GS_HO_REQUEST, AS_SAC, GSS_SAC, GST_SAC,
-                                                   }, &gsg_ho_req_desc, NULL, NULL);
+    if (snf_obj.is_merged == TRUE)
+        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsg_ho_req_t){
+                                                           GS_HO_REQUEST, AS_SAC, GSS_SAC, GST_SAC,
+                                                       }, &gsg_ho_req_desc, NULL, NULL);
     return LDCAUC_OK;
 }
 

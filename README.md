@@ -200,6 +200,17 @@ int8_t (*finish_auth)();
 
 - 当 AS 完成认证后触发。
 
+#### 实现样例
+
+```c++
+int8_t as_finish_auth_func() {
+    //AS LME 转换状态为OPEN
+    change_LME_OPEN();
+    ...
+    return LDACS_OK;
+}
+```
+
 ### 2. `trans_snp` - SNP 数据传输回调
 
 ```c
@@ -208,7 +219,7 @@ int8_t (*trans_snp)(uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *buf, size_t buf_l
 
 #### 功能描述
 
-- **用途**：由 **AS/GS ** 调用，向 SNP 层传递数据。
+- **用途**：由 **AS/GS** 调用，向 SNP 层传递数据。
 - **参数说明**：
     - `AS_SAC`：发送/接收数据的 AS 对应的 SAC。
     - `GS_SAC`：关联的 GS 对应的SAC。
@@ -219,6 +230,19 @@ int8_t (*trans_snp)(uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *buf, size_t buf_l
 
 - AS/GS SNF 需将协议数据单元（PDU）传递至 SNP 层时调用。
 
+#### 实现样例
+
+```c++
+int8_t trans_snp_data(uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *buf, size_t buf_len) {
+    orient_sdu_t *orient_sdu = create_orient_sdus(AS_SAC, GS_SAC);
+
+    /* 通过原语向SNP层传递对应报文 */
+    CLONE_TO_CHUNK(*orient_sdu->buf, buf, buf_len);
+    preempt_prim(&SN_DATA_REQ_PRIM, SN_TYP_FROM_LME, orient_sdu, free_orient_sdus, 0, 0);
+    return LDACS_OK;
+}
+```
+
 ### 3. `register_snf_fail` - 注册失败回调
 
 ```c
@@ -227,7 +251,7 @@ int8_t (*register_snf_fail)(uint16_t AS_SAC);
 
 #### 功能描述
 
-- **用途**：由 **AS/GS ** 调用，处理服务注册失败事件。
+- **用途**：由 **AS/GS** 调用，处理服务注册失败事件。
 - **应包含功能**：
     - 清理与失败 AS 关联的 LME 和 DLS 实体资源。
 - **参数说明**：
@@ -237,7 +261,21 @@ int8_t (*register_snf_fail)(uint16_t AS_SAC);
 
 - SNF注册失败时触发。
 
-### 4. `finish_handover` - 切换完成回调
+#### 实现样例
+
+```c++
+int8_t register_snf_failed(uint16_t AS_SAC) {
+    if (config.role == LD_AS) {
+        ...
+    } else {
+        //删除AS_SAC对应的LME实体
+        delete_lme_as_node_by_sac(AS_SAC, clear_as_man);
+    }
+    return LD_OK;
+}
+```
+
+### 4. `gst_ho_complete_key` - 切换过程，目的GS完成密钥更新后的回调
 
 ```c
 int8_t (*gst_ho_complete_key)(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC);
@@ -245,7 +283,7 @@ int8_t (*gst_ho_complete_key)(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC)
 
 #### 功能描述
 
-- **用途**：由 **GS ** 调用，标识切换流程完成。
+- **用途**：由 **GS** 调用，标识切换流程完成。
 - **应包含功能**：
     - 向源基站（GS Source）发送切换确认（ACK）。
 - **参数说明**：
@@ -255,7 +293,41 @@ int8_t (*gst_ho_complete_key)(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC)
 
 #### 调用场景
 
-- 当目标 GS 确认切换完成并需通知源基站时触发。
+- 当目标 GS 完成切换过程的密钥协商后触发。
+
+#### 调用位置
+
+![](pic/gst_ho_complete_key.png)
+
+#### 实现样例
+
+```c++
+int8_t gst_handover_complete_key(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC) {
+    peer_propt_t *peer = get_peer_propt(GSS_SAC);
+    if (!peer) return LD_ERR_INTERNAL;
+
+    uint16_t next_co = get_CO();
+    
+    //向源GS发送切换准备完成消息
+    ...
+
+    //初始化正在切换的AS的LME实体
+    if (has_lme_as_enode(AS_SAC) == FALSE) {
+        set_lme_as_enode(init_as_man(AS_SAC, AS_UA, lme_layer_objs.GS_SAC));
+    }
+    //初始化正在切换的AS的DLS
+    set_dls_enode(lme_layer_objs.GS_SAC, AS_SAC);
+    //分配CO
+    set_mac_CO(next_co, AS_SAC);
+
+    //准备发送SYNC_POLL
+    to_sync_poll_t *to_sync = calloc(1, sizeof(to_sync_poll_t));
+    to_sync->SAC = AS_SAC;
+    list_add_tail(&to_sync->lpointer, lme_layer_objs.to_sync_head);
+
+    return LDCAUC_OK;
+}
+```
 
 ---
 
@@ -435,14 +507,14 @@ int8_t unregister_snf_en(uint16_t AS_SAC);
 - **参数**:
     - `AS_SAC`: 飞机 SAC
 
-### 6. 上传SNF报文
+### 6. 将控制数据上传给SNF处理
 
 ```c
 int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_buf, size_t buf_len);
 ```
 
 - **调用场景**：
-  SNP上传控制报文时
+  SNP上传控制数据时
 
 - **参数**:
     - `is_valid`:   是否是合法报文
@@ -455,10 +527,12 @@ int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_
 样例文件：src/layer/lme/lme.c
 
 ```c++
+//写在了SN_SAPD接口里
 void SN_SAPD_L_cb(ld_prim_t *prim) {
     switch (prim->prim_seq) {
         case SN_DATA_IND: {
             orient_sdu_t *osdu = prim->prim_objs;
+            //调用位置， 根据角色自动判断数据传输方向
             upload_snf(prim->prim_obj_typ == VER_PASS, osdu->AS_SAC, osdu->GS_SAC, osdu->buf->ptr, osdu->buf->len);
             break;
         }
@@ -481,6 +555,9 @@ int8_t gss_handover_request_trigger(uint16_t AS_SAC, uint16_t GSS_SAC, uint16_t 
     - `AS_SAC`: 飞机 SAC
     - `GSS_SAC`: 源地面站 SAC
     - `GST_SAC`: 目标地面站 SAC
+- **使用位置**
+
+![使用位置1](pic/gss_handover_request_trigger.png)
 
 ### 8. 目标GS切换响应
 
@@ -496,6 +573,9 @@ int8_t gst_handover_request_handle(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS
     - `AS_UA`: 飞机 UA
     - `GSS_SAC`: 源地面站 SAC
     - `GST_SAC`: 目标地面站 SAC
+- **使用位置**
+
+![使用位置1](pic/gst_handover_request_handle.png)
 
 ### 9. 目的GS完成切换
 
@@ -508,6 +588,10 @@ int8_t gst_handover_complete(uint16_t AS_SAC);
 
 - **参数**:
     - `AS_SAC`: 飞机 SAC
+    -
+- **使用位置**
+
+![使用位置1](pic/gst_handover_complete.png)
 
 ### 10. 生成随机数
 
