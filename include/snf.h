@@ -386,6 +386,8 @@ l_err handle_recv_msg(buffer_t *buf, const snf_entity_t *as_man);
 
 l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_man, KEY_HANDLE key_med);
 
+l_err recv_failed_msg(buffer_t *buf, snf_entity_t *as_man);
+
 /* gsnf */
 l_err recv_gsnf(basic_conn_t *bcp);
 

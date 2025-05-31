@@ -247,12 +247,12 @@ l_km_err key_get_handle(ldacs_roles role, const char *owner1, const char *owner2
         goto cleanup;
     }
 
-    QueryResult_for_keyvalue *result = query_keyvalue(db_name, table_name, qr_mk->ids[0]);
-    if (!result) {
-        log_error("Key not found or error occurred.\n");
-        err = LD_ERR_KM_QUERY;
-        goto cleanup;
-    }
+    // QueryResult_for_keyvalue *result = query_keyvalue(db_name, table_name, qr_mk->ids[0]);
+    // if (!result) {
+    //     log_error("Key not found or error occurred.\n");
+    //     err = LD_ERR_KM_QUERY;
+    //     goto cleanup;
+    // }
 cleanup:
     free(db_name);
     return err;
@@ -266,8 +266,50 @@ l_km_err as_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_
     if (km_update_masterkey(db_name, table_name, sgw_ua, gs_s_ua, gs_t_ua, as_ua, nonce->len, nonce->ptr) != LD_KM_OK) {
         log_error("Cannot update masterkey");
         err = LD_ERR_KM_UPDATE_SESSIONKEY;
+        return err;
     }
-    free(db_name);
 
+    QueryResult_for_queryid *qr_mk = query_id(db_name, table_name, as_ua, gs_t_ua, MASTER_KEY_AS_GS, ACTIVE);
+    if (qr_mk->count == 0) {
+        log_error("Query mkid failed. %s %s %s\n", table_name, as_ua, gs_t_ua);
+        err = LD_ERR_KM_QUERY;
+        return err;
+    }
+
+    if ((err = get_handle_from_db(db_name, table_name, qr_mk->ids[0], key_as_gs)) != LD_KM_OK) {
+        log_error("err:%08x", err);
+    }
+
+    free(db_name);
+    return err;
+}
+
+l_km_err sgw_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_t_ua, const char *as_ua,
+                         buffer_t *nonce, buffer_t **kbuf) {
+    l_km_err err = LD_KM_OK;
+    char *db_name = get_db_name(LD_AS);
+    const char *table_name = get_table_name(LD_AS);
+
+    if (km_update_masterkey(db_name, table_name, sgw_ua, gs_s_ua, gs_t_ua, as_ua, nonce->len, nonce->ptr) != LD_KM_OK) {
+        log_error("Cannot update masterkey");
+        err = LD_ERR_KM_UPDATE_SESSIONKEY;
+        return err;
+    }
+
+    QueryResult_for_queryid *qr_mk = query_id(db_name, table_name, as_ua, gs_t_ua, MASTER_KEY_AS_GS, ACTIVE);
+    if (qr_mk->count == 0) {
+        log_error("Query mkid failed. %s %s %s\n", table_name, as_ua, gs_t_ua);
+        err = LD_ERR_KM_QUERY;
+        return err;
+    }
+    QueryResult_for_keyvalue *result = query_keyvalue(db_name, table_name, qr_mk->ids[0]);
+    if (!result) {
+        log_error("Key not found or error occurred.\n");
+        err = LD_ERR_KM_QUERY;
+    }
+    CLONE_TO_CHUNK(**kbuf, result->key, result->key_len);
+
+
+    free(db_name);
     return err;
 }

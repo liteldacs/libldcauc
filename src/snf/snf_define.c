@@ -278,11 +278,12 @@ ss_recv_handler_t as_recv_handlers[] = {
     {SN_SESSION_EST_RQST, recv_sn_session_est_rqst},
 };
 
-size_t sgw_recv_handlers_sz = 3;
+size_t sgw_recv_handlers_sz = 4;
 ss_recv_handler_t sgw_recv_handlers[] = {
     {AUC_RQST, recv_auc_rqst},
     {AUC_KEY_EXC, recv_auc_key_exec},
     {KEY_UPD_RESP, recv_key_update_resp},
+    {FAILED_MESSAGE, recv_failed_msg},
 };
 
 uint64_t hash_enode(const void *item, uint64_t seed0, uint64_t seed1) {

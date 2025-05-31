@@ -52,5 +52,8 @@ l_km_err sgw_derive_keys(uint8_t *rand, uint32_t randlen, const char *as_ua,
 l_km_err as_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_t_ua, const char *as_ua,
                         buffer_t *nonce, KEY_HANDLE*key_as_gs);
 
+l_km_err sgw_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_t_ua, const char *as_ua,
+                         buffer_t *nonce, buffer_t **kbuf);
+
 
 #endif //LDACS_SIM_KEY_H

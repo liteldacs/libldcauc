@@ -306,6 +306,17 @@ l_err send_key_update_rqst(snf_entity_t *en, uint16_t GST_SAC) {
 
     handle_send_msg(key_upd_rqst, &key_upd_rqst_desc, en, en->key_as_sgw_s_h);
 
+    //更新AS-GS密钥，等待在接收到RESP之后向目的GS发送KEY
+    UA_STR(ua_as);
+    UA_STR(gss_sac);
+    UA_STR(gst_sac);
+    UA_STR(ua_sgw);
+    get_ua_str(en->AS_UA, ua_as);
+    get_ua_str(en->CURR_GS_SAC, gss_sac);
+    get_ua_str(GST_SAC, gst_sac);
+    get_ua_str(DFT_SGW_UA, ua_sgw);
+    sgw_update_mkey(ua_sgw, gss_sac, gst_sac, ua_as, nonce, &en->key_as_gs_b);
+
     free_buffer(nonce);
     return LD_OK;
 }
@@ -324,16 +335,16 @@ l_err recv_key_update_rqst(buffer_t *buf, snf_entity_t *as_man) {
     // log_warn("NEW GS: %d %d %d", key_upd_rqst.AS_SAC, key_upd_rqst.SAC_src, key_upd_rqst.SAC_dst);
 
     UA_STR(ua_as);
-    UA_STR(ua_gs_src);
-    UA_STR(ua_gs_dst);
+    UA_STR(gss_sac);
+    UA_STR(gst_sac);
     UA_STR(ua_sgw);
     get_ua_str(as_man->AS_UA, ua_as);
-    get_ua_str(key_upd_rqst.SAC_src, ua_gs_src);
-    get_ua_str(key_upd_rqst.SAC_dst, ua_gs_dst);
+    get_ua_str(key_upd_rqst.SAC_src, gss_sac);
+    get_ua_str(key_upd_rqst.SAC_dst, gst_sac);
     get_ua_str(DFT_SGW_UA, ua_sgw);
-    as_update_mkey(ua_sgw, ua_gs_src, ua_gs_dst, ua_as, key_upd_rqst.NONCE, &as_man->key_as_gs_h);
 
     send_key_update_resp(as_man, key_upd_rqst.SAC_dst);
+    as_update_mkey(ua_sgw, gss_sac, gst_sac, ua_as, key_upd_rqst.NONCE, &as_man->key_as_gs_h);
     return LD_OK;
 }
 
@@ -364,6 +375,7 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man) {
         return LD_ERR_INVALID_MAC;
     }
 
+    as_man->CURR_GS_SAC = key_upd_resp.SAC_dst;
     buffer_t *sdu = gen_pdu(&(gs_key_trans_t){
                                 .key = as_man->key_as_gs_b,
                                 .nonce = as_man->shared_random
@@ -371,7 +383,6 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man) {
     );
     basic_conn_t *bc;
     if (snf_obj.is_merged == FALSE) {
-        log_warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! => %d", key_upd_resp.SAC_dst);
         gs_propt_node_t *save = get_conn_enode(key_upd_resp.SAC_dst);
         if (!save) return LD_ERR_NULL;
         bc = &save->propt->bc;
@@ -381,6 +392,7 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man) {
         if (!save) return LD_ERR_NULL;
         bc = &save->bc;
     }
+    //接收到RESP之后向目的GS发送KEY
     if (!bc || bc->opt->send_handler(bc, &(gsnf_pkt_cn_t){
                                          GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
                                          sdu
@@ -390,6 +402,11 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man) {
         free_buffer(sdu);
     }
 
+    return LD_OK;
+}
+
+l_err recv_failed_msg(buffer_t *buf, snf_entity_t *as_man) {
+    log_error("GS has received Failed Message.");
     return LD_OK;
 }
 

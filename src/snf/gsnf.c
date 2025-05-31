@@ -79,7 +79,7 @@ static l_err parse_gsg_pkt(buffer_t *pdu, gsg_pkt_t **gsnf_pkg_ptr, snf_entity_t
 
     *as_man = (snf_entity_t *) get_enode(gsnf_pkg->AS_SAC);
 
-    log_buf(LOG_DEBUG, "RECV GSNF SDU", gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
+    log_buf(LOG_INFO, "RECV GSNF SDU", gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
     return LD_OK;
 }
 
