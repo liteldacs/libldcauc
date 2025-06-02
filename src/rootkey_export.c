@@ -54,7 +54,9 @@ char *get_table_name(ldacs_roles role) {
 
 
 int main(int argc, char **argv) {
+#ifndef USE_CRYCARD
     generate_kek(1);
+#endif
     char *db_name = get_db_name(LD_SGW);
     char *table_name = get_table_name(LD_SGW);
     if (km_rkey_gen_export("000010010", "000010000", ROOT_KEY_LEN, DEFAULT_VALIDATE, db_name, table_name,

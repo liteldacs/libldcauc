@@ -147,13 +147,6 @@ int8_t clear_snf_en(snf_entity_t *snf_en) {
         ? revoke_key(snf_obj.role, ua_as, ua_gs, MASTER_KEY_AS_GS)
         : revoke_key(snf_obj.role, ua_as, ua_sgw, MASTER_KEY_AS_SGW);
 
-#ifdef UNUSE_CRYCARD
-    if (snf_en->key_as_sgw_r_h != NULL) { free_buffer(snf_en->key_as_sgw_r_h); }
-    if (snf_en->key_as_sgw_s_h != NULL) { free_buffer(snf_en->key_as_sgw_s_h); }
-    if (snf_en->key_as_gs_h != NULL) { free_buffer(snf_en->key_as_gs_h); }
-    if (snf_en->key_session_en_h != NULL) { free_buffer(snf_en->key_session_en_h); }
-    if (snf_en->key_session_mac_h != NULL) { free_buffer(snf_en->key_session_mac_h); }
-#endif
     return LDCAUC_OK;
 }
 
