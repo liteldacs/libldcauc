@@ -5,7 +5,6 @@
 
 #include <key_manage.h>
 #include <ld_log.h>
-#include "crypto/secure_core.h"
 #include "crypto/key.h"
 
 char *get_db_name(ldacs_roles role) {
@@ -54,7 +53,7 @@ char *get_table_name(ldacs_roles role) {
 
 
 int main(int argc, char **argv) {
-#ifndef USE_CRYCARD
+#ifdef UNUSE_CRYCARD
     generate_kek(1);
 #endif
     char *db_name = get_db_name(LD_SGW);
