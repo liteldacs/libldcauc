@@ -376,7 +376,7 @@ l_err recv_key_update_rqst(buffer_t *buf, snf_entity_t *as_man);
 
 l_err send_key_update_resp(void *args, uint16_t GST_SAC);
 
-l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *as_man);
+l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *en);
 
 l_err send_sn_session_est_resp(void *args);
 

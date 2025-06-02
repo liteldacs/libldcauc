@@ -86,6 +86,7 @@ static field_desc key_upd_rqst_fields[] = {
     {ft_set, SAC_LEN, "GS_SAC_SRC", NULL},
     {ft_set, SAC_LEN, "GS_SAC_DST", NULL},
     {ft_set, NCC_LEN, "NCC", NULL},
+    {ft_pad, 0, "PAD", NULL},
     {ft_fl_str, 0, "NONCE", &(pk_fix_length_t){.len = NONCE_LEN}},
     {ft_pad, 0, "PAD", NULL},
     {ft_end, 0, NULL, NULL},

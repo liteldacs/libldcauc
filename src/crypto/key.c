@@ -188,6 +188,7 @@ l_km_err gs_install_keys(buffer_t *ag_raw, uint8_t *rand, uint32_t randlen, cons
                          const char *gs_ua, KEY_HANDLE*key_ag) {
     l_km_err err = LD_KM_OK;
 
+
     if ((err = key_install(ag_raw, as_ua, gs_ua, rand, randlen, key_ag)) != LD_KM_OK) {
         log_error("GS cannot install Kas-sgw");
         return err;
@@ -269,6 +270,7 @@ l_km_err as_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_
         return err;
     }
 
+
     QueryResult_for_queryid *qr_mk = query_id(db_name, table_name, as_ua, gs_t_ua, MASTER_KEY_AS_GS, ACTIVE);
     if (qr_mk->count == 0) {
         log_error("Query mkid failed. %s %s %s\n", table_name, as_ua, gs_t_ua);
@@ -287,8 +289,8 @@ l_km_err as_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_
 l_km_err sgw_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_t_ua, const char *as_ua,
                          buffer_t *nonce, buffer_t **kbuf) {
     l_km_err err = LD_KM_OK;
-    char *db_name = get_db_name(LD_AS);
-    const char *table_name = get_table_name(LD_AS);
+    char *db_name = get_db_name(LD_SGW);
+    const char *table_name = get_table_name(LD_SGW);
 
     if (km_update_masterkey(db_name, table_name, sgw_ua, gs_s_ua, gs_t_ua, as_ua, nonce->len, nonce->ptr) != LD_KM_OK) {
         log_error("Cannot update masterkey");
@@ -310,6 +312,26 @@ l_km_err sgw_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs
     CLONE_TO_CHUNK(**kbuf, result->key, result->key_len);
 
 
+    free(db_name);
+    return err;
+}
+
+l_km_err revoke_key(ldacs_roles role, const char *owner1, const char *owner2, enum KEY_TYPE key_type) {
+    l_km_err err = LD_KM_OK;
+    char *db_name = get_db_name(role);
+    const char *table_name = get_table_name(role);
+    QueryResult_for_queryid *qr_mk = query_id(db_name, table_name, owner1, owner2, key_type, ACTIVE);
+    if (qr_mk->count == 0) {
+        log_error("Query mkid failed. %s %s %s\n", table_name, owner1, owner2);
+        err = LD_ERR_KM_QUERY;
+        goto cleanup;
+    }
+
+    if ((err = km_revoke_key(db_name, table_name, qr_mk->ids[0])) != LD_KM_OK) {
+        err = LD_ERR_KM_QUERY;
+    }
+
+cleanup:
     free(db_name);
     return err;
 }

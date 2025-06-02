@@ -16,6 +16,7 @@
 #define LDCAUC_WRONG_PARA (-2)
 #define LDCAUC_NULL (-3)
 #define LDCAUC_INTERNAL_ERROR (-4)
+#define LDCAUC_WRONG_ROLE (-5)
 
 #define ROLE_AS 1
 #define ROLE_GS 2
@@ -163,6 +164,8 @@ int8_t register_snf_en(uint8_t role, uint16_t AS_SAC, uint32_t AS_UA, uint16_t G
  * @return 错误码
  */
 int8_t unregister_snf_en(uint16_t AS_SAC);
+
+int8_t exit_snf_en(uint16_t AS_SAC);
 
 /**
  * \brief 用于AS/GS, LME向SNF上传控制数据

@@ -137,6 +137,16 @@ int8_t clear_snf_en(snf_entity_t *snf_en) {
     if (snf_en->shared_random != NULL) { free_buffer(snf_en->shared_random); }
     if (snf_en->key_as_gs_b != NULL) { free_buffer(snf_en->key_as_gs_b); }
 
+    UA_STR(ua_as);
+    UA_STR(ua_gs);
+    UA_STR(ua_sgw);
+    get_ua_str(snf_en->AS_UA, ua_as);
+    get_ua_str(snf_obj.GS_SAC, ua_gs);
+    get_ua_str(DFT_SGW_UA, ua_sgw);
+    snf_obj.role == LD_GS
+        ? revoke_key(snf_obj.role, ua_as, ua_gs, MASTER_KEY_AS_GS)
+        : revoke_key(snf_obj.role, ua_as, ua_sgw, MASTER_KEY_AS_SGW);
+
 #ifdef UNUSE_CRYCARD
     if (snf_en->key_as_sgw_r_h != NULL) { free_buffer(snf_en->key_as_sgw_r_h); }
     if (snf_en->key_as_sgw_s_h != NULL) { free_buffer(snf_en->key_as_sgw_s_h); }
@@ -192,6 +202,15 @@ int8_t register_snf_en(uint8_t role, uint16_t AS_SAC, uint32_t AS_UA, uint16_t G
 }
 
 int8_t unregister_snf_en(uint16_t AS_SAC) {
+    if (snf_obj.role == ROLE_AS) {
+        return clear_snf_en(snf_obj.as_snf_en);
+    } else {
+        return delete_enode_by_sac(AS_SAC, clear_snf_en);
+    }
+}
+
+int8_t exit_snf_en(uint16_t AS_SAC) {
+    if (snf_obj.role != ROLE_GS) return LDCAUC_WRONG_ROLE;
     snf_obj.is_merged == FALSE
         ? gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsnf_st_chg_t){
                                                              .G_TYP = GSNF_STATE_CHANGE,
@@ -204,12 +223,6 @@ int8_t unregister_snf_en(uint16_t AS_SAC) {
                                                          &(gsg_as_exit_t){GS_AS_EXIT, AS_SAC},
                                                          &gsg_as_exit_desc, NULL, NULL);
     return delete_enode_by_sac(AS_SAC, clear_snf_en);
-}
-
-
-static void free_snf_en(snf_entity_t *en) {
-    clear_snf_en(en);
-    free(en);
 }
 
 

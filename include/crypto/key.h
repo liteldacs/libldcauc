@@ -55,5 +55,7 @@ l_km_err as_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_
 l_km_err sgw_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_t_ua, const char *as_ua,
                          buffer_t *nonce, buffer_t **kbuf);
 
+l_km_err revoke_key(ldacs_roles role, const char *owner1, const char *owner2, enum KEY_TYPE key_type);
+
 
 #endif //LDACS_SIM_KEY_H
