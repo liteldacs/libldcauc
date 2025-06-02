@@ -51,6 +51,14 @@ char *get_table_name(ldacs_roles role) {
     }
 }
 
+#ifdef UNUSE_CRYCARD
+#define HOME_DIR "/home/jiaxv/"
+#else
+
+#define HOME_DIR "/root/"
+
+#endif
+
 
 int main(int argc, char **argv) {
 #ifdef UNUSE_CRYCARD
@@ -59,18 +67,18 @@ int main(int argc, char **argv) {
     char *db_name = get_db_name(LD_SGW);
     char *table_name = get_table_name(LD_SGW);
     if (km_rkey_gen_export("000010010", "000010000", ROOT_KEY_LEN, DEFAULT_VALIDATE, db_name, table_name,
-                           "/home/jiaxv/.ldcauc/keystore/000010010_rootkey.bin")) {
+                           HOME_DIR".ldcauc/keystore/000010010_rootkey.bin")) {
         log_error("根密钥生成、保存和导出失败。");
     }
     if (km_rkey_gen_export("000045678", "000010000", ROOT_KEY_LEN, DEFAULT_VALIDATE, db_name, table_name,
-                           "/home/jiaxv/.ldcauc/keystore/000045678_rootkey.bin")) {
+                           HOME_DIR".ldcauc/keystore/000045678_rootkey.bin")) {
         log_error("根密钥生成、保存和导出失败。");
     }
-    if (km_writefile_to_cryptocard("/home/jiaxv/.ldcauc/keystore/000010010_rootkey.bin", "000010010_rootkey.bin") !=
+    if (km_writefile_to_cryptocard(HOME_DIR".ldcauc/keystore/000010010_rootkey.bin", "000010010_rootkey.bin") !=
         LD_KM_OK) {
         log_error("Error writing to ccard.");
     }
-    if (km_writefile_to_cryptocard("/home/jiaxv/.ldcauc/keystore/000045678_rootkey.bin", "000045678_rootkey.bin") !=
+    if (km_writefile_to_cryptocard(HOME_DIR".ldcauc/keystore/000045678_rootkey.bin", "000045678_rootkey.bin") !=
         LD_KM_OK) {
         log_error("Error writing to ccard.");
     }
