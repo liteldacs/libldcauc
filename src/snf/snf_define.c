@@ -247,6 +247,7 @@ static field_desc gsnf_key_upd_remind_fields[] = {
     {ft_set, 4, "VER", NULL},
     {ft_set, 12, "AS SAC", NULL},
     {ft_set, 4, "KEY_TYPE", NULL},
+    {ft_pad, 0, "PAD", NULL},
     {ft_set, 12, "GSS SAC", NULL},
     {ft_set, 12, "GST SAC", NULL},
     {ft_pad, 0, "PAD", NULL},

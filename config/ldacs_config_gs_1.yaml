@@ -1,0 +1,22 @@
+role: gs
+GS-SAC: 16
+port: 8080
+debug: 1
+
+gs:
+  peer_server_port: 23456
+  peers:
+    - peer_addr: 127.0.0.1
+      peer_port: 23457
+      peer_SAC: 17
+
+gsnf:
+  gsnf_addr: 127.0.0.1
+  gsnf_addr_v6: ::1
+  gsnf_remote_port: 55559
+  gsnf_local_port: 55560
+
+init_fl_freq: 1110.0
+init_rl_freq: 964.0
+http:
+  http_port: 9789
