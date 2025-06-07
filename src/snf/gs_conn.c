@@ -44,6 +44,7 @@ l_err init_client_gs_conn_service(char *remote_addr, int remote_port, int local_
         .close_handler = gs_conn_close,
         .send_handler = defalut_send_pkt,
         .epoll_fd = core_epoll_create(0, -1),
+        // .timeout = 200,
     };
 
     gs_conn_service.sgw_conn = client_entity_setup(&gs_conn_service.net_ctx, remote_addr, remote_port, local_port);
