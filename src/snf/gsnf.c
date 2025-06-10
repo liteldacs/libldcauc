@@ -166,8 +166,8 @@ l_err recv_gsnf(basic_conn_t *bc) {
                     get_ua_str(as_man->AS_UA, ua_as);
                     get_ua_str(snf_obj.GS_SAC, ua_gs);
 
-                    gs_install_keys(key_trans.key, key_trans.nonce->ptr, key_trans.nonce->len, ua_as, ua_gs,
-                                    &as_man->key_as_gs_h);
+                    key_install(key_trans.key, ua_as, ua_gs, key_trans.nonce->ptr, key_trans.nonce->len,
+                                &as_man->key_as_gs_h);
 
                     /* 未来使用切换状态机， 抛弃这种方法*/
                     if (snf_obj.GS_SAC != as_man->CURR_GS_SAC) {
@@ -333,8 +333,8 @@ l_err recv_gsg(basic_conn_t *bc) {
                     get_ua_str(as_man->AS_UA, ua_as);
                     get_ua_str(as_man->CURR_GS_SAC, ua_gs);
 
-                    gs_install_keys(key_trans.key, key_trans.nonce->ptr, key_trans.nonce->len, ua_as, ua_gs,
-                                    &as_man->key_as_gs_h);
+                    key_install(key_trans.key, ua_as, ua_gs, key_trans.nonce->ptr, key_trans.nonce->len,
+                                &as_man->key_as_gs_h);
 
                     /* 未来使用切换状态机， 抛弃这种方法*/
                     if (snf_obj.GS_SAC != as_man->CURR_GS_SAC) {

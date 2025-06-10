@@ -100,8 +100,8 @@ cleanup:
 /**
  *
  */
-static l_km_err key_install(buffer_t *key_ag, const char *as_ua, const char *gs_ua, uint8_t *nonce, uint32_t nonce_len,
-                            KEY_HANDLE *handle) {
+l_km_err key_install(buffer_t *key_ag, const char *as_ua, const char *gs_ua, uint8_t *nonce, uint32_t nonce_len,
+                     KEY_HANDLE *handle) {
     l_km_err err = LD_KM_OK;
 
     char *db_name = get_db_name(LD_GS);

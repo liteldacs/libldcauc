@@ -40,8 +40,11 @@ l_km_err as_derive_keys(uint8_t *rand, uint32_t randlen, const char *as_ua,
 /**
 * for GS : install SGW-sent raw Kas-gs
 */
-l_km_err gs_install_keys(buffer_t *ag_raw, uint8_t *rand, uint32_t randlen, const char *as_ua,
-                         const char *gs_ua, KEY_HANDLE*key_ag);
+// l_km_err gs_install_keys(buffer_t *ag_raw, uint8_t *rand, uint32_t randlen, const char *as_ua,
+//                          const char *gs_ua, KEY_HANDLE*key_ag);
+l_km_err key_install(buffer_t *key_ag, const char *as_ua, const char *gs_ua, uint8_t *nonce, uint32_t nonce_len,
+                     KEY_HANDLE *handle);
+
 
 /**
 * for SGW : derive Kas-sgw and derive raw Kas-gs
