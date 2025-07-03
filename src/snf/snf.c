@@ -230,7 +230,7 @@ static buffer_t *gen_failed_pkt(uint8_t failed_type, uint16_t as_sac, buffer_t *
                    }, &failed_message_desc, "FAILED MESSAGE");
 }
 
-int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_buf, size_t buf_len) {
+int8_t upload_snf(uint8_t failed_type, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_buf, size_t buf_len) {
     /* sub-net control will not have unacknowledged data */
 
     buffer_t *in_buf = init_buffer_unptr();
@@ -240,8 +240,8 @@ int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_
         snf_entity_t *as_man = get_enode(AS_SAC);
         if (snf_obj.is_merged == TRUE) {
             // send failed message to SGW
-            if (!is_valid) {
-                to_trans_buf = gen_failed_pkt(0xFF, as_man->AS_SAC, in_buf);
+            if (failed_type) {
+                to_trans_buf = gen_failed_pkt(failed_type, as_man->AS_SAC, in_buf);
                 gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsg_pkt_t){
                                                                    GS_SNF_DOWNLOAD, as_man->AS_SAC, to_trans_buf
                                                                }, &gsg_pkt_desc, NULL, NULL);
@@ -274,8 +274,8 @@ int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_
             }
         } else {
             to_trans_buf = in_buf;
-            if (!is_valid) {
-                to_trans_buf = gen_failed_pkt(0xFF, as_man->AS_SAC, in_buf);
+            if (failed_type) {
+                to_trans_buf = gen_failed_pkt(failed_type, as_man->AS_SAC, in_buf);
                 gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsnf_pkt_cn_t){
                                                                    GSNF_SNF_DOWNLOAD, DEFAULT_GSNF_VERSION, AS_SAC,
                                                                    0xFF,

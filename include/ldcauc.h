@@ -170,14 +170,14 @@ int8_t exit_snf_en(uint16_t AS_SAC);
 /**
  * \brief 用于AS/GS, LME向SNF上传控制数据
  * 当LME通过SN原语收到控制数据后，通过此函数触发对应SNF功能
- * @param[in] is_valid  SNP报文是否有效
+ * @param[in] failed_type  SNP报文是否有效
  * @param[in] AS_SAC    AS SAC
  * @param[in] GS_SAC    GS SAC
  * @param[in] snp_buf   SNP报文
  * @param[in] buf_len   报文长度
  * @return 错误码
  */
-int8_t upload_snf(bool is_valid, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_buf, size_t buf_len);
+int8_t upload_snf(uint8_t failed_type, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *snp_buf, size_t buf_len);
 
 /**
  * 源GS向地面部分通告Handover请求

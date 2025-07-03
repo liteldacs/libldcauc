@@ -139,7 +139,7 @@ static field_desc failed_message_fields[] = {
     {ft_set, 3, "VER", NULL},
     {ft_set, 2, "PID", NULL},
     {ft_set, 12, "SAC", NULL},
-    {ft_set, 4, "FAILED TYPE", NULL},
+    {ft_set, 8, "FAILED TYPE", NULL},
     {ft_pad, 0, "PAD", NULL},
     {ft_dl_str, 0, "MSG", NULL},
     {ft_end, 0, NULL, NULL},
