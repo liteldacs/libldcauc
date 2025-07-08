@@ -289,6 +289,16 @@ static field_desc gsg_sac_resp_fields[] = {
 };
 struct_desc_t gsg_sac_resp_desc = {"GSG SAC RESPONSE", gsg_sac_resp_fields};
 
+static field_desc gsg_data_fields[] = {
+    {ft_set, 4, "TYPE", NULL},
+    {ft_set, 12, "AS SAC", NULL},
+    {ft_set, 8, "IDENTIFY", NULL},
+    {ft_dl_str, 0, "SDU", NULL},
+    {ft_pad, 0, "PAD", NULL},
+    {ft_end, 0, NULL, NULL},
+};
+struct_desc_t gsg_data_desc = {"GSG DATA", gsg_data_fields};
+
 
 size_t as_recv_handlers_sz = 3;
 ss_recv_handler_t as_recv_handlers[] = {

@@ -86,15 +86,6 @@ typedef int8_t (*register_snf_fail)(uint16_t AS_SAC);
  */
 typedef int8_t (*gst_ho_complete_key)(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC);
 
-/**
- * @brief 内部接口
- * @param[in] AS_SAC 发送或接收的`AS`对应的SAC
- * @param[in] GS_SAC 发送或接收的`GS`对应的SAC
- * @param[in] buf 应传递的数据
- * @param[in] buf_len 数据长度
- * @return 错误码
- */
-typedef int8_t (*aaaa)(uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *buf, size_t buf_len);
 
 /**
  * \brief  AS初始化SNF层

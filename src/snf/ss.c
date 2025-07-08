@@ -425,10 +425,10 @@ l_err send_sn_session_est_resp(void *args) {
     char ipv6_bin[16] = {0};
 
     // Convert IPv6 string to binary
-    // if (inet_pton(AF_INET6, snf_obj.net_opt.addr, ipv6_bin) != 1) {
-    //     log_error("inet_pton");
-    //     return LD_ERR_INTERNAL;
-    // }
+    if (inet_pton(AF_INET6, "2001:da8:a012:389:7bf3:43b7:9c07:4f01", ipv6_bin) != 1) {
+        log_error("inet_pton");
+        return LD_ERR_INTERNAL;
+    }
 
     CLONE_TO_CHUNK(*est_resp.IP_AS, (uint8_t *) ipv6_bin, IPV6_ADDRLEN >> 3)
 

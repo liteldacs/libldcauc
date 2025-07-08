@@ -14,6 +14,7 @@
 #include "ldcauc.h"
 #include "snp_sub.h"
 #include "gs_conn.h"
+#include "inside.h"
 
 #define DEFAULT_GSNF_VERSION 0x01
 #define GTYP_LEN 4
@@ -126,6 +127,7 @@ typedef struct snf_obj_s {
     trans_snp trans_snp_func;
     register_snf_fail register_fail_func;
     gst_ho_complete_key gst_ho_complete_key_func;
+    inside_setup_entity setup_entity_func;
 
     //AS
     finish_auth finish_auth_func;
@@ -329,6 +331,13 @@ typedef struct gsg_sac_resp_s {
     uint16_t AS_SAC;
 } gsg_sac_resp_t;
 
+typedef struct gsg_data_s {
+    uint8_t TYPE;
+    uint16_t AS_SAC;
+    uint8_t IDTF;
+    buffer_t *sdu;
+} gsg_data_t;
+
 #pragma pack()
 
 
@@ -354,6 +363,7 @@ extern struct_desc_t gs_sac_resp_desc;
 extern struct_desc_t gs_key_trans_desc;
 extern struct_desc_t gsg_sac_rqst_desc;
 extern struct_desc_t gsg_sac_resp_desc;
+extern struct_desc_t gsg_data_desc;
 
 
 extern size_t as_recv_handlers_sz;

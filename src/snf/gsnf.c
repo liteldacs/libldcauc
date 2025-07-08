@@ -44,18 +44,16 @@ static void free_gsg_sac_pkg(gsg_ini_pkt_t *gsnf_sac) {
 }
 
 
-static l_err parse_gsg_sac_reqp_pkt(buffer_t *pdu, gsg_sac_resp_t **gsg_sac_resp) {
+static l_err parse_gsg_sac_reqp_pkt(buffer_t *pdu, gsg_sac_resp_t *gsg_sac_resp) {
     pb_stream gsg_sac_pbs;
     zero(&gsg_sac_pbs);
-    gsg_sac_resp_t *gsg_sac_pkg = *gsg_sac_resp;
 
     init_pbs(&gsg_sac_pbs, pdu->ptr, pdu->len, "GSNF IN");
 
-    if (!in_struct(gsg_sac_pkg, &gsg_sac_resp_desc, &gsg_sac_pbs, NULL)) {
+    if (!in_struct(gsg_sac_resp, &gsg_sac_resp_desc, &gsg_sac_pbs, NULL)) {
         log_error("Cannot parse gsg pdu");
         return LD_ERR_INTERNAL;
     }
-    log_warn("???????????");
     return LD_OK;
 }
 
@@ -354,12 +352,12 @@ l_err recv_gsg(basic_conn_t *bc) {
             break;
         }
         case GS_SAC_RESP: {
-            gsg_sac_resp_t *resp = NULL;
+            gsg_sac_resp_t resp;
             parse_gsg_sac_reqp_pkt(&mlt_ld->bc.read_pkt, &resp);
-            if (resp == NULL) {
-                return LD_ERR_NULL;
+            if (snf_obj.setup_entity_func) {
+                snf_obj.setup_entity_func(resp.AS_SAC, resp.AS_UA);
             }
-            inside_combine_sac_response(resp->AS_SAC, resp->AS_UA);
+            // inside_combine_sac_response(resp.AS_SAC, resp.AS_UA);
             break;
         }
         default: {
