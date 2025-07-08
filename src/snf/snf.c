@@ -21,60 +21,64 @@ void init_as_snf_layer(finish_auth finish_auth, trans_snp trans_snp, register_sn
     snf_obj.register_fail_func = register_fail;
 }
 
-void init_gs_snf_layer(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_remote_port, uint16_t gsnf_local_port,
-                       trans_snp trans_snp, register_snf_fail register_fail,
+void init_gs_snf_layer(config_t *config, trans_snp trans_snp, register_snf_fail register_fail,
                        gst_ho_complete_key gst_ho_complete_key) {
     snf_obj.snf_emap = init_enode_map();
     snf_obj.role = LD_GS;
-    snf_obj.GS_SAC = GS_SAC;
+    snf_obj.GS_SAC = config->GS_SAC;
     snf_obj.is_merged = TRUE;
     snf_obj.is_beihang = TRUE;
     snf_obj.is_e304 = FALSE;
+    snf_obj.config = config;
 
     snf_obj.trans_snp_func = trans_snp;
     snf_obj.register_fail_func = register_fail;
     snf_obj.gst_ho_complete_key_func = gst_ho_complete_key;
 
-    if (init_client_gs_conn_service(gsnf_addr, gsnf_remote_port, gsnf_local_port, recv_gsg) != LD_OK) {
+    if (init_client_gs_conn_service(config->gsnf_addr_v6, config->gsnf_remote_port, config->gsnf_local_port, recv_gsg)
+        != LD_OK) {
         log_warn("Cannot init GS connection service");
     }
 }
 
-void init_gs_snf_layer_inside(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_remote_port, uint16_t gsnf_local_port,
-                              trans_snp trans_snp, register_snf_fail register_fail,
+void init_gs_snf_layer_inside(config_t *config, trans_snp trans_snp, register_snf_fail register_fail,
                               gst_ho_complete_key gst_ho_complete_key, inside_setup_entity setup_entity) {
     snf_obj.snf_emap = init_enode_map();
     snf_obj.role = LD_GS;
-    snf_obj.GS_SAC = GS_SAC;
+    snf_obj.GS_SAC = config->GS_SAC;
     snf_obj.is_merged = TRUE;
     snf_obj.is_beihang = FALSE;
     snf_obj.is_e304 = TRUE;
+    snf_obj.config = config;
 
     snf_obj.trans_snp_func = trans_snp;
     snf_obj.register_fail_func = register_fail;
     snf_obj.gst_ho_complete_key_func = gst_ho_complete_key;
     snf_obj.setup_entity_func = setup_entity;
 
-    if (init_client_gs_conn_service(gsnf_addr, gsnf_remote_port, gsnf_local_port, recv_gsg) != LD_OK) {
+    if (init_client_gs_conn_service(config->gsnf_addr_v6, config->gsnf_remote_port, config->gsnf_local_port, recv_gsg)
+        != LD_OK) {
         log_warn("Cannot init GS connection service");
     }
 }
 
 
-void init_gs_snf_layer_unmerged(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_remote_port, uint16_t gsnf_local_port,
-                                trans_snp trans_snp, register_snf_fail register_fail, gst_ho_complete_key finish_ho) {
+void init_gs_snf_layer_unmerged(
+    config_t *config, trans_snp trans_snp, register_snf_fail register_fail, gst_ho_complete_key finish_ho) {
     snf_obj.snf_emap = init_enode_map();
     snf_obj.role = LD_GS;
-    snf_obj.GS_SAC = GS_SAC;
+    snf_obj.GS_SAC = config->GS_SAC;
     snf_obj.is_merged = FALSE;
     snf_obj.is_beihang = FALSE;
     snf_obj.is_e304 = FALSE;
+    snf_obj.config = config;
 
 
     snf_obj.trans_snp_func = trans_snp;
     snf_obj.register_fail_func = register_fail;
     snf_obj.gst_ho_complete_key_func = finish_ho;
-    if (init_client_gs_conn_service(gsnf_addr, gsnf_remote_port, gsnf_local_port, recv_gsnf) != LD_OK) {
+    if (init_client_gs_conn_service(config->gsnf_addr_v6, config->gsnf_remote_port, config->gsnf_local_port, recv_gsnf)
+        != LD_OK) {
         log_warn("Cannot init GS connection service");
     }
 }

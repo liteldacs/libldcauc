@@ -135,6 +135,8 @@ typedef struct snf_obj_s {
     bool is_merged;
     bool is_beihang;
     bool is_e304;
+
+    config_t *config;
 } snf_obj_t;
 
 extern snf_obj_t snf_obj;

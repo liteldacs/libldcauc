@@ -5,6 +5,7 @@
 #ifndef LDCAUC_H
 #define LDCAUC_H
 
+#include <ld_config.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -97,28 +98,24 @@ void init_as_snf_layer(finish_auth finish_auth, trans_snp trans_snp, register_sn
 
 /**
  * \brief  GS初始化SNF层(合并GSC)
- * @param[in] GS_SAC        GS SAC
- * @param[in] gsnf_addr     GSC IPv6地址
- * @param[in] gsnf_local_port
+ * @param config
  * @param[in] trans_snp     LME->SNP 回调函数
  * @param[in] register_fail 注册失败回调函数
  * @param[in] gst_ho_complete_key     完成Handover 回调函数
  */
-void init_gs_snf_layer(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_remote_port, uint16_t gsnf_local_port,
+void init_gs_snf_layer(config_t *config,
                        trans_snp trans_snp, register_snf_fail register_fail, gst_ho_complete_key gst_ho_complete_key);
 
 
 /**
  * \brief  GS初始化SNF层（未合并GSC）
- * @param[in] GS_SAC        GS SAC
- * @param[in] gsnf_addr     网关IPv4地址
- * @param[in] gsnf_local_port
+ * @param config
  * @param[in] trans_snp     LME->SNP 回调函数
  * @param[in] register_fail 注册失败回调函数
  * @param[in] finish_ho     完成Handover 回调函数
  */
-void init_gs_snf_layer_unmerged(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_remote_port, uint16_t gsnf_local_port,
-                                trans_snp trans_snp, register_snf_fail register_fail, gst_ho_complete_key finish_ho);
+void init_gs_snf_layer_unmerged(
+    config_t *config, trans_snp trans_snp, register_snf_fail register_fail, gst_ho_complete_key finish_ho);
 
 /**
  * \brief  网关初始化SNF层

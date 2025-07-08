@@ -23,7 +23,7 @@ typedef int8_t (*inside_setup_entity)(uint16_t AS_SAC, uint32_t AS_UA);
  * @param[in] register_fail 注册失败回调函数
  * @param[in] gst_ho_complete_key     完成Handover 回调函数
  */
-void init_gs_snf_layer_inside(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_remote_port, uint16_t gsnf_local_port,
+void init_gs_snf_layer_inside(config_t *config,
                               trans_snp trans_snp, register_snf_fail register_fail,
                               gst_ho_complete_key gst_ho_complete_key, inside_setup_entity setup_entity);
 
