@@ -272,6 +272,23 @@ static field_desc gs_key_trans_fields[] = {
 
 struct_desc_t gs_key_trans_desc = {"KEY_TRANS_DESC", gs_key_trans_fields};
 
+static field_desc gsg_sac_rqst_fields[] = {
+    {ft_set, 4, "TYPE", NULL},
+    {ft_set, 28, "AS UA", NULL},
+    {ft_pad, 0, "PAD", NULL},
+    {ft_end, 0, NULL, NULL},
+};
+struct_desc_t gsg_sac_rqst_desc = {"GSG SAC REQUEST", gsg_sac_rqst_fields};
+
+static field_desc gsg_sac_resp_fields[] = {
+    {ft_set, 4, "TYPE", NULL},
+    {ft_set, 28, "AS UA", NULL},
+    {ft_set, 12, "AS SAC", NULL},
+    {ft_pad, 0, "PAD", NULL},
+    {ft_end, 0, NULL, NULL},
+};
+struct_desc_t gsg_sac_resp_desc = {"GSG SAC RESPONSE", gsg_sac_resp_fields};
+
 
 size_t as_recv_handlers_sz = 3;
 ss_recv_handler_t as_recv_handlers[] = {

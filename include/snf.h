@@ -46,7 +46,9 @@ typedef enum {
 } GSNF_TYPE;
 
 typedef enum {
-    GS_INITIAL_MSG = 3,
+    GS_SAC_RQST = 1,
+    GS_SAC_RESP,
+    GS_INITIAL_MSG,
     GS_SNF_UPLOAD,
     GS_SNF_DOWNLOAD,
     GS_KEY_TRANS,
@@ -56,6 +58,8 @@ typedef enum {
     GS_UP_UPLOAD_TRANSPORT,
     GS_UP_DOWNLOAD_TRANSPORT,
     GS_AS_EXIT,
+    GS_DATA_UP,
+    GS_DATA_DOWN,
 } GSG_TYPE;
 
 typedef enum {
@@ -127,6 +131,8 @@ typedef struct snf_obj_s {
     finish_auth finish_auth_func;
 
     bool is_merged;
+    bool is_beihang;
+    bool is_e304;
 } snf_obj_t;
 
 extern snf_obj_t snf_obj;
@@ -312,6 +318,17 @@ typedef struct gs_sac_resp_sdu_s {
     uint16_t SAC;
 } gs_sac_resp_sdu_t;
 
+typedef struct gsg_sac_rqst_s {
+    uint8_t TYPE;
+    uint32_t AS_UA;
+} gsg_sac_rqst_t;
+
+typedef struct gsg_sac_resp_s {
+    uint8_t TYPE;
+    uint32_t AS_UA;
+    uint16_t AS_SAC;
+} gsg_sac_resp_t;
+
 #pragma pack()
 
 
@@ -335,6 +352,8 @@ extern struct_desc_t gsnf_st_chg_desc;
 extern struct_desc_t gsnf_key_upd_remind_desc;
 extern struct_desc_t gs_sac_resp_desc;
 extern struct_desc_t gs_key_trans_desc;
+extern struct_desc_t gsg_sac_rqst_desc;
+extern struct_desc_t gsg_sac_resp_desc;
 
 
 extern size_t as_recv_handlers_sz;

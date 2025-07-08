@@ -87,6 +87,16 @@ typedef int8_t (*register_snf_fail)(uint16_t AS_SAC);
 typedef int8_t (*gst_ho_complete_key)(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC);
 
 /**
+ * @brief 内部接口
+ * @param[in] AS_SAC 发送或接收的`AS`对应的SAC
+ * @param[in] GS_SAC 发送或接收的`GS`对应的SAC
+ * @param[in] buf 应传递的数据
+ * @param[in] buf_len 数据长度
+ * @return 错误码
+ */
+typedef int8_t (*aaaa)(uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *buf, size_t buf_len);
+
+/**
  * \brief  AS初始化SNF层
  * @param[in] finish_auth   认证完成回调函数
  * @param[in] trans_snp     LME->SNP 回调函数
@@ -105,6 +115,7 @@ void init_as_snf_layer(finish_auth finish_auth, trans_snp trans_snp, register_sn
  */
 void init_gs_snf_layer(uint16_t GS_SAC, char *gsnf_addr, uint16_t gsnf_remote_port, uint16_t gsnf_local_port,
                        trans_snp trans_snp, register_snf_fail register_fail, gst_ho_complete_key gst_ho_complete_key);
+
 
 /**
  * \brief  GS初始化SNF层（未合并GSC）
@@ -245,5 +256,6 @@ int8_t snpsub_calc_hmac(uint16_t AS_SAC, uint8_t SEC, uint8_t *in, size_t in_len
  * @return 错误码
  */
 int8_t snpsub_vfy_hmac(uint16_t AS_SAC, uint8_t SEC, uint8_t *snp_pdu, size_t pdu_len);
+
 
 #endif //LDCAUC_H
