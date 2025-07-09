@@ -77,7 +77,22 @@ static l_err parse_gsg_pkt(buffer_t *pdu, gsg_pkt_t **gsnf_pkg_ptr, snf_entity_t
 
     *as_man = (snf_entity_t *) get_enode(gsnf_pkg->AS_SAC);
 
-    log_buf(LOG_INFO, "RECV GSNF SDU", gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
+    log_buf(LOG_INFO, "RECV GSG SDU", gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
+    return LD_OK;
+}
+
+static l_err parse_gsg_data_pkt(buffer_t *pdu, gsg_data_t *data_pkt) {
+    pb_stream gsnf_pbs;
+    zero(&gsnf_pbs);
+    data_pkt->sdu = init_buffer_ptr(pdu->len - GSG_DATA_PKT_HEAD_LEN);
+
+    init_pbs(&gsnf_pbs, pdu->ptr, pdu->len, "GSNF IN");
+
+    if (!in_struct(data_pkt, &gsg_pkt_desc, &gsnf_pbs, NULL)) {
+        log_error("Cannot parse gsnf pdu");
+        return LD_ERR_INTERNAL;
+    }
+
     return LD_OK;
 }
 
@@ -140,7 +155,8 @@ l_err recv_gsnf(basic_conn_t *bc) {
             switch (gsnf_pkt->G_TYP) {
                 case GSNF_SNF_UPLOAD: {
                     /* 构造具有指向性的传递结构，根据源和目的SAC指示下层向对应实体传输 */
-                    snf_obj.trans_snp_func(as_man->AS_SAC, snf_obj.GS_SAC, gsnf_pkt->sdu->ptr, gsnf_pkt->sdu->len);
+                    snf_obj.trans_snp_func(as_man->AS_SAC, snf_obj.GS_SAC, gsnf_pkt->sdu->ptr, gsnf_pkt->sdu->len,
+                                           TRUE);
                     break;
                 }
                 case GSNF_SNF_DOWNLOAD: {
@@ -307,7 +323,8 @@ l_err recv_gsg(basic_conn_t *bc) {
             switch (gsnf_pkg->TYPE) {
                 case GS_UP_UPLOAD_TRANSPORT:
                 case GS_SNF_UPLOAD: {
-                    snf_obj.trans_snp_func(as_man->AS_SAC, snf_obj.GS_SAC, gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
+                    snf_obj.trans_snp_func(as_man->AS_SAC, snf_obj.GS_SAC, gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len,
+                                           TRUE);
                     break;
                 }
                 case GS_SNF_DOWNLOAD: {
@@ -353,11 +370,21 @@ l_err recv_gsg(basic_conn_t *bc) {
         }
         case GS_SAC_RESP: {
             gsg_sac_resp_t resp;
-            parse_gsg_sac_reqp_pkt(&mlt_ld->bc.read_pkt, &resp);
+            if (parse_gsg_sac_reqp_pkt(&mlt_ld->bc.read_pkt, &resp) != LD_OK) {
+                return LD_ERR_INTERNAL;
+            };
             if (snf_obj.setup_entity_func) {
                 snf_obj.setup_entity_func(resp.AS_SAC, resp.AS_UA);
             }
             // inside_combine_sac_response(resp.AS_SAC, resp.AS_UA);
+            break;
+        }
+        case GS_DATA_UP: {
+            gsg_data_t data_pkt;
+            if (parse_gsg_data_pkt(&mlt_ld->bc.read_pkt, &data_pkt) != LD_OK) {
+                return LD_ERR_INTERNAL;
+            }
+            snf_obj.trans_snp_func(data_pkt.AS_SAC, snf_obj.GS_SAC, data_pkt.sdu->ptr, data_pkt.sdu->len, FALSE);
             break;
         }
         default: {

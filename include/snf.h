@@ -245,6 +245,7 @@ typedef struct gsg_sac_pkt_s {
 /**
  * TODO： 12.17需改： 除了前两条报文单独解析外，其他报文都是一个head + payload的形式，head共用一个描述，payload各自不同，switch的时候把他们放一起，查出来SAC后对应的as_man后再搞一次switch
  */
+
 typedef struct gsg_pkt_s {
     uint8_t TYPE;
     uint16_t AS_SAC;
@@ -365,6 +366,7 @@ extern struct_desc_t gs_sac_resp_desc;
 extern struct_desc_t gs_key_trans_desc;
 extern struct_desc_t gsg_sac_rqst_desc;
 extern struct_desc_t gsg_sac_resp_desc;
+#define GSG_DATA_PKT_HEAD_LEN 3
 extern struct_desc_t gsg_data_desc;
 
 

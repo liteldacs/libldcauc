@@ -69,7 +69,7 @@ typedef int8_t (*finish_auth)();
  * @param[in] buf_len 数据长度
  * @return 错误码
  */
-typedef int8_t (*trans_snp)(uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *buf, size_t buf_len);
+typedef int8_t (*trans_snp)(uint16_t AS_SAC, uint16_t GS_SAC, uint8_t *buf, size_t buf_len, bool is_ctrl);
 
 /**
 * @brief 用于AS/GS，注册失败回调，应包含功能：1. 清理LME、DLS层对应的AS entity
