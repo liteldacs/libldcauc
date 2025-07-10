@@ -77,7 +77,7 @@ void init_gs_snf_layer_unmerged(
     snf_obj.trans_snp_func = trans_snp;
     snf_obj.register_fail_func = register_fail;
     snf_obj.gst_ho_complete_key_func = finish_ho;
-    if (init_client_gs_conn_service(config->gsnf_addr_v6, config->gsnf_remote_port, config->gsnf_local_port, recv_gsnf)
+    if (init_client_gs_conn_service(config->gsnf_addr, config->gsnf_remote_port, config->gsnf_local_port, recv_gsnf)
         != LD_OK) {
         log_warn("Cannot init GS connection service");
     }
