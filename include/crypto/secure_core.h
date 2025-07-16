@@ -10,7 +10,7 @@
 #include <ldacs_utils.h>
 #include <key_manage.h>
 
-#define DEBUG
+//#define DEBUG
 
 #define S_TYP_LEN 8
 #define VER_LEN 3

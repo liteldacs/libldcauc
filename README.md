@@ -50,7 +50,7 @@ make -j12 && sudo make install
 
 #cjson
 git clone https://github.com/DaveGamble/cJSON
-cd base64 && mkdir build && cd build
+cd cJSON && mkdir build && cd build
 cmake ..
 make -j12 && sudo make install
 ```
@@ -61,9 +61,8 @@ make -j12 && sudo make install
 
 ```shell
 git clone https://github.com/thirdxiaozhu/GmSSL-liteldacs
-cd GmSSL && mkdir build && cd build
-cmake .. 
-&& make -j12 && sudo make install
+cd GmSSL-liteldacs && mkdir build && cd build
+cmake .. && make -j12 && sudo make install
 ```
 
 - **对于AS、GS设备**
@@ -83,6 +82,7 @@ git clone xxxx
 ```shell
 git clone https://github.com/liteldacs/liteldacscrypto.git
 cd liteldacscrypto && mkdir build && cd build
+cmake .. && make -j12 && sudo make install
 ```
 
 根据环境设置选项
@@ -122,8 +122,7 @@ make -j12 & sudo make install
 ```shell
 git clone https://github.com/liteldacs/liteldacssdk.git
 cd liteldacssdk && mkdir build && cd build
-cmake ..
-make -j12 && sudo make install
+cmake .. && make -j12 && sudo make install
 ```
 
 ### 安装本项目

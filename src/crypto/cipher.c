@@ -15,8 +15,8 @@ l_err encrypt_uint8(void *key, uint8_t *in, size_t in_len, uint8_t *out, size_t 
     log_buf(LOG_DEBUG, "原始报文：", in, in_len);
     log_buf(LOG_DEBUG, "加密后报文：", out, *out_len);
 
-    log_debug("原始报文: %s", in);
-    log_debug("加密后报文: %s", out);
+    // log_debug("原始报文: %s", in);
+    // log_debug("加密后报文: %s", out);
 #endif
 
     // uint8_t plain[128] = {0};
@@ -34,8 +34,8 @@ l_err decrypt_uint8(void *key, uint8_t *in, size_t in_len, uint8_t *out, size_t 
     log_buf(LOG_DEBUG, "原始报文：", in, in_len);
     log_buf(LOG_DEBUG, "解密后报文：", out, *out_len);
 
-    log_debug("原始报文: %s", in);
-    log_debug("解密后报文: %s", out);
+    // log_debug("原始报文: %s", in);
+    // log_debug("解密后报文: %s", out);
 #endif
     return LD_OK;
 }

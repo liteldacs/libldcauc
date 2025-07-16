@@ -58,10 +58,18 @@ char *get_table_name(ldacs_roles role) {
 #endif
 
 
-const size_t as_count = 2;
+const size_t as_count = 10;
 static const char *default_ASs[] = {
-    "000010010",
-    "000045678"
+    "000012345",
+    "000023456",
+    "000034567",
+    "000045678",
+    "000056789",
+    "000067890",
+    "000078901",
+    "000089012",
+    "000090123",
+    "000001234",
 };
 
 bool is_SGW = FALSE;
