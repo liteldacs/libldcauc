@@ -8,13 +8,16 @@
 #include "crypto/key.h"
 
 char *get_db_name(ldacs_roles role) {
-    //    log_error("%s%s%s", get_home_dir(), BASE_PATH, ROOT_KEY_BIN_PATH);
     char *buf_dir = calloc(PATH_MAX, sizeof(char));
     char *db_name = NULL;
+    // char *home_dir = get_home_dir();
+    //
+    // snprintf(buf_dir, PATH_MAX, "%s%s", home_dir, BASE_PATH);
 
     snprintf(buf_dir, PATH_MAX, "%s%s", get_home_dir(), BASE_PATH);
     if (check_path(buf_dir) != LD_OK) {
         free(buf_dir);
+        // free(home_dir);
         return NULL;
     }
 
@@ -30,11 +33,13 @@ char *get_db_name(ldacs_roles role) {
             break;
         default:
             free(buf_dir);
+            // free(home_dir);
             return NULL;
     }
     snprintf(buf_dir, PATH_MAX, "%s%s%s", get_home_dir(), BASE_PATH, db_name);
-
-
+    // snprintf(buf_dir, PATH_MAX, "%s%s", buf_dir, db_name);
+    //
+    // free(home_dir);
     return buf_dir;
 }
 
