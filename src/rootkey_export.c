@@ -7,7 +7,7 @@
 #include <ld_log.h>
 #include "crypto/key.h"
 
-char *get_db_name(ldacs_roles role) {
+static char *get_db_name(ldacs_roles role, const char *ua) {
     char *buf_dir = calloc(PATH_MAX, sizeof(char));
     char *db_name = NULL;
     // char *home_dir = get_home_dir();
@@ -36,14 +36,14 @@ char *get_db_name(ldacs_roles role) {
             // free(home_dir);
             return NULL;
     }
-    snprintf(buf_dir, PATH_MAX, "%s%s%s", get_home_dir(), BASE_PATH, db_name);
+    snprintf(buf_dir, PATH_MAX, "%s%s%s_%s.db", get_home_dir(), BASE_PATH, db_name, ua);
     // snprintf(buf_dir, PATH_MAX, "%s%s", buf_dir, db_name);
     //
     // free(home_dir);
     return buf_dir;
 }
 
-char *get_table_name(ldacs_roles role) {
+static char *get_table_name(ldacs_roles role) {
     switch (role) {
         case LD_AS:
             return AS_KEY_TABLE;
@@ -195,13 +195,12 @@ int main(int argc, char **argv) {
 
 
 int8_t generate_rkey() {
-    char *db_name = get_db_name(LD_SGW);
-    char *table_name = get_table_name(LD_SGW);
+    char *db_name = get_db_name(LD_SGW, "000010000");
 
     for (int i = 0; i < as_count; i++) {
         char *buf_dir = calloc(PATH_MAX, sizeof(char));
         snprintf(buf_dir, PATH_MAX, HOME_DIR".ldcauc/keystore/%s_rootkey.bin", default_ASs[i]);
-        if (km_rkey_gen_export(default_ASs[i], "000010000", ROOT_KEY_LEN, DEFAULT_VALIDATE, db_name, table_name,
+        if (km_rkey_gen_export(default_ASs[i], "000010000", ROOT_KEY_LEN, DEFAULT_VALIDATE, db_name, SGW_KEY_TABLE,
                                buf_dir)) {
             log_error("根密钥生成、保存和导出失败。 %s", default_ASs[i]);
             free(db_name);
@@ -216,7 +215,7 @@ int8_t generate_rkey() {
 }
 
 int8_t write_rkey_tocard(void) {
-    char *db_name = get_db_name(is_SGW ? LD_SGW : LD_AS);
+    // char *db_name = get_db_name(is_SGW ? LD_SGW : LD_AS);
 
     for (int i = 0; i < as_count; i++) {
         char *dir_buf = calloc(PATH_MAX, sizeof(char));
@@ -228,13 +227,13 @@ int8_t write_rkey_tocard(void) {
             log_error("Error writing to ccard. %s", default_ASs[i]);
             free(dir_buf);
             free(file_buf);
-            free(db_name);
+            // free(db_name);
             return -1;
         }
         free(dir_buf);
         free(file_buf);
         log_info("Install Rootkey for %s Has Succeed", default_ASs[i]);
     }
-    free(db_name);
+    // free(db_name);
     return 0;
 }

@@ -4,14 +4,15 @@
 
 #include "crypto/key.h"
 
-static char *get_db_name(ldacs_roles role) {
-    //    log_error("%s%s%s", get_home_dir(), BASE_PATH, ROOT_KEY_BIN_PATH);
+static char *get_db_name(ldacs_roles role, const char *ua) {
     char *buf_dir = calloc(PATH_MAX, sizeof(char));
     char *db_name = NULL;
 
+    char *home_dir = get_home_dir();
     snprintf(buf_dir, PATH_MAX, "%s%s", get_home_dir(), BASE_PATH);
     if (check_path(buf_dir) != LD_OK) {
         free(buf_dir);
+        free(home_dir);
         return NULL;
     }
 
@@ -30,11 +31,12 @@ static char *get_db_name(ldacs_roles role) {
         }
         default: {
             free(buf_dir);
+            free(home_dir);
             return NULL;
         }
     }
-    snprintf(buf_dir, PATH_MAX, "%s%s%s", get_home_dir(), BASE_PATH, db_name);
-
+    snprintf(buf_dir, PATH_MAX, "%s%s%s_%s.db", get_home_dir(), BASE_PATH, db_name, ua);
+    free(home_dir);
 
     return buf_dir;
 }
@@ -57,14 +59,13 @@ static char *get_table_name(ldacs_roles role) {
 /* for AS / SGW */
 static l_km_err key_derive_as_sgw(ldacs_roles role, uint8_t *rand, uint32_t randlen, const char *as_ua,
                                   const char *gs_ua, const char *sgw_ua, KEY_HANDLE *key_aw) {
-    char *db_name = get_db_name(role);
+    char *db_name = role == LD_AS ? get_db_name(LD_AS, as_ua) : get_db_name(LD_SGW, sgw_ua);
     char *table_name = get_table_name(role);
 
     l_km_err err = LD_KM_OK;
     QueryResult_for_queryid *qr_rk = query_id(db_name, table_name, as_ua, sgw_ua, ROOT_KEY, ACTIVE);
     if (qr_rk == NULL || qr_rk->count == 0) {
         log_error("Query mkid failed.\n");
-        free(db_name);
         err = LD_ERR_KM_QUERY;
         goto cleanup;
     }
@@ -82,14 +83,12 @@ static l_km_err key_derive_as_sgw(ldacs_roles role, uint8_t *rand, uint32_t rand
     QueryResult_for_queryid *qr_mk = query_id(db_name, table_name, as_ua, sgw_ua, MASTER_KEY_AS_SGW, ACTIVE);
     if (qr_mk->count == 0) {
         log_error("Query mkid failed.\n");
-        free(db_name);
         err = LD_ERR_KM_QUERY;
         goto cleanup;
     }
 
     if ((err = get_handle_from_db(db_name, table_name, qr_mk->ids[0], key_aw)) != LD_KM_OK) {
         log_error("Can not get handle");
-        free(db_name);
         goto cleanup;
     }
 cleanup:
@@ -97,14 +96,12 @@ cleanup:
     return err;
 }
 
-/**
- *
- */
+/* for GS */
 l_km_err key_install(buffer_t *key_ag, const char *as_ua, const char *gs_ua, uint8_t *nonce, uint32_t nonce_len,
                      KEY_HANDLE *handle) {
     l_km_err err = LD_KM_OK;
 
-    char *db_name = get_db_name(LD_GS);
+    char *db_name = get_db_name(LD_GS, gs_ua);
     const char *table_name = get_table_name(LD_GS);
     if ((err = km_install_key(db_name, table_name, key_ag->len, key_ag->ptr, as_ua, gs_ua, nonce_len, nonce)) !=
         LD_KM_OK) {
@@ -129,14 +126,15 @@ cleanup:
     return err;
 }
 
+/* for AS / SGW */
 l_km_err embed_rootkey(ldacs_roles role, const char *as_ua, const char *sgw_ua) {
     l_km_err err = LD_KM_OK;
 
-    char *db_name = get_db_name(role);
+    char *db_name = role == LD_AS ? get_db_name(LD_AS, as_ua) : get_db_name(LD_SGW, sgw_ua);
     const char *table_name = get_table_name(role);
     char key_name[64] = {0};
     snprintf(key_name, 64, "%s_rootkey.bin", as_ua);
-    if (role == LD_AS || role == LD_GS) // AS从密码卡导入根密钥
+    if (role == LD_AS) // AS从密码卡导入根密钥
     {
         if ((err = km_rkey_import(db_name, table_name, key_name) !=
                    LD_KM_OK)) {
@@ -201,7 +199,7 @@ l_km_err sgw_derive_keys(uint8_t *rand, uint32_t randlen, const char *as_ua,
                          const char *gs_ua, const char *sgw_ua, KEY_HANDLE*key_aw, buffer_t **kbuf) {
     l_km_err err = LD_KM_OK;
 
-    char *db_name = get_db_name(LD_SGW);
+    char *db_name = get_db_name(LD_SGW, sgw_ua);
     const char *table_name = get_table_name(LD_SGW);
     if ((err = key_derive_as_sgw(LD_SGW, rand, randlen, as_ua, gs_ua, sgw_ua, key_aw)) != LD_KM_OK) {
         log_error("Can not derive Kas-sgw");
@@ -233,7 +231,24 @@ cleanup:
 l_km_err key_get_handle(ldacs_roles role, const char *owner1, const char *owner2, enum KEY_TYPE key_type,
                         KEY_HANDLE*handle) {
     l_km_err err = LD_KM_OK;
-    char *db_name = get_db_name(role);
+
+    // char *db_name = get_db_name(role, 0);
+    char *db_name = NULL;
+    switch (role) {
+        case LD_AS:
+            db_name = get_db_name(LD_AS, owner1);
+            break;
+        case LD_GS:
+            db_name = get_db_name(LD_GS, owner2);
+            break;
+        case LD_SGW:
+            db_name = get_db_name(LD_SGW, owner2);
+            break;
+        default:
+            return LD_ERR_KM_GET_HANDLE;
+    }
+    if (!db_name) return LD_ERR_KM_GET_HANDLE;
+
     const char *table_name = get_table_name(role);
     QueryResult_for_queryid *qr_mk = query_id(db_name, table_name, owner1, owner2, key_type, ACTIVE);
     if (qr_mk->count == 0) {
@@ -262,7 +277,7 @@ cleanup:
 l_km_err as_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_t_ua, const char *as_ua,
                         buffer_t *nonce, KEY_HANDLE*key_as_gs) {
     l_km_err err = LD_KM_OK;
-    char *db_name = get_db_name(LD_AS);
+    char *db_name = get_db_name(LD_AS, as_ua);
     const char *table_name = get_table_name(LD_AS);
     if (km_update_masterkey(db_name, table_name, sgw_ua, gs_s_ua, gs_t_ua, as_ua, nonce->len, nonce->ptr) != LD_KM_OK) {
         log_error("Cannot update masterkey");
@@ -289,7 +304,7 @@ l_km_err as_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_
 l_km_err sgw_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_t_ua, const char *as_ua,
                          buffer_t *nonce, buffer_t **kbuf) {
     l_km_err err = LD_KM_OK;
-    char *db_name = get_db_name(LD_SGW);
+    char *db_name = get_db_name(LD_SGW, sgw_ua);
     const char *table_name = get_table_name(LD_SGW);
 
     if (km_update_masterkey(db_name, table_name, sgw_ua, gs_s_ua, gs_t_ua, as_ua, nonce->len, nonce->ptr) != LD_KM_OK) {
@@ -318,7 +333,22 @@ l_km_err sgw_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs
 
 l_km_err revoke_key(ldacs_roles role, const char *owner1, const char *owner2, enum KEY_TYPE key_type) {
     l_km_err err = LD_KM_OK;
-    char *db_name = get_db_name(role);
+    // char *db_name = get_db_name(role, 0);
+    char *db_name = NULL;
+    switch (role) {
+        case LD_AS:
+            db_name = get_db_name(LD_AS, owner1);
+            break;
+        case LD_GS:
+            db_name = get_db_name(LD_GS, owner2);
+            break;
+        case LD_SGW:
+            db_name = get_db_name(LD_SGW, owner2);
+            break;
+        default:
+            return LD_ERR_KM_DESTROY_KEY;
+    }
+    if (!db_name) return LD_ERR_KM_KEY_VERIFY;
     const char *table_name = get_table_name(role);
     QueryResult_for_queryid *qr_mk = query_id(db_name, table_name, owner1, owner2, key_type, ACTIVE);
     if (qr_mk->count == 0) {
