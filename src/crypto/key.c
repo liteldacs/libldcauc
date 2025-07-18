@@ -63,9 +63,10 @@ static l_km_err key_derive_as_sgw(ldacs_roles role, uint8_t *rand, uint32_t rand
     char *table_name = get_table_name(role);
 
     l_km_err err = LD_KM_OK;
+
     QueryResult_for_queryid *qr_rk = query_id(db_name, table_name, as_ua, sgw_ua, ROOT_KEY, ACTIVE);
     if (qr_rk == NULL || qr_rk->count == 0) {
-        log_error("Query mkid failed.\n");
+        log_error("Query mkid failed. %s %s %s %s\n", db_name, table_name, as_ua, sgw_ua);
         err = LD_ERR_KM_QUERY;
         goto cleanup;
     }

@@ -108,7 +108,7 @@ buffer_t *get_auc_sharedinfo_buf(auc_sharedinfo_t *info);
 
 l_err
 generate_auc_kdf(ldacs_roles role, buffer_t *random, void **key_as_sgw, void **key_as_gs, buffer_t **key_as_gs_raw,
-                 uint16_t AS_UA, uint16_t GS_FLAG);
+                 uint32_t AS_UA, uint16_t GS_FLAG);
 
 
 #endif //LDACS_SIM_AUTH_H

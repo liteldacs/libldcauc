@@ -181,13 +181,15 @@ buffer_t *get_auc_sharedinfo_buf(auc_sharedinfo_t *info) {
 
 l_err
 generate_auc_kdf(ldacs_roles role, buffer_t *random, void **key_as_sgw, void **key_as_gs, buffer_t **key_as_gs_raw,
-                 uint16_t AS_UA, uint16_t GS_FLAG) {
+                 uint32_t AS_UA, uint16_t GS_FLAG) {
     UA_STR(ua_as);
     UA_STR(ua_gs);
     UA_STR(ua_sgw);
     get_ua_str(AS_UA, ua_as);
     get_ua_str(GS_FLAG, ua_gs);
     get_ua_str(DFT_SGW_UA, ua_sgw);
+
+        log_error("!!!!!! %d %d",AS_UA, DFT_SGW_UA);
 
     switch (role) {
         case LD_AS:

@@ -131,6 +131,7 @@ static snf_entity_t *init_snf_en(uint8_t role, uint16_t AS_SAC, uint32_t AS_UA, 
     UA_STR(ua_as);
     UA_STR(ua_sgw);
 
+
     if (role == ROLE_AS) {
         if (embed_rootkey(LD_AS, get_ua_str(snf_en->AS_UA, ua_as), get_ua_str(DFT_SGW_UA, ua_sgw)) != LD_KM_OK ||
             key_get_handle(LD_AS, get_ua_str(snf_en->AS_UA, ua_as), get_ua_str(DFT_SGW_UA, ua_sgw), ROOT_KEY,
