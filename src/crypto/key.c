@@ -9,7 +9,7 @@ static char *get_db_name(ldacs_roles role, const char *ua) {
     char *db_name = NULL;
 
     char *home_dir = get_home_dir();
-    snprintf(buf_dir, PATH_MAX, "%s%s", get_home_dir(), BASE_PATH);
+    snprintf(buf_dir, PATH_MAX, "%s%s", home_dir, BASE_PATH);
     if (check_path(buf_dir) != LD_OK) {
         free(buf_dir);
         free(home_dir);
@@ -35,7 +35,7 @@ static char *get_db_name(ldacs_roles role, const char *ua) {
             return NULL;
         }
     }
-    snprintf(buf_dir, PATH_MAX, "%s%s%s_%s.db", get_home_dir(), BASE_PATH, db_name, ua);
+    snprintf(buf_dir, PATH_MAX, "%s%s%s_%s.db", home_dir, BASE_PATH, db_name, ua);
     free(home_dir);
 
     return buf_dir;
@@ -94,6 +94,8 @@ static l_km_err key_derive_as_sgw(ldacs_roles role, uint8_t *rand, uint32_t rand
     }
 cleanup:
     free(db_name);
+    free_queryid_result(qr_rk);
+    free_queryid_result(qr_mk);
     return err;
 }
 
@@ -124,6 +126,7 @@ l_km_err key_install(buffer_t *key_ag, const char *as_ua, const char *gs_ua, uin
 
 cleanup:
     free(db_name);
+    free_queryid_result(qr_mk);
     return err;
 }
 
@@ -163,6 +166,7 @@ l_km_err embed_rootkey(ldacs_roles role, const char *as_ua, const char *sgw_ua) 
     log_info("embed OK!");
 cleanup:
     free(db_name);
+    free_queryid_result(query_result_as);
     return err;
 }
 
@@ -224,7 +228,8 @@ l_km_err sgw_derive_keys(uint8_t *rand, uint32_t randlen, const char *as_ua,
 
 cleanup:
     free(db_name);
-
+    free_queryid_result(qr_mk);
+    // free_query_result(qr_mk);
     return err;
 }
 
@@ -272,6 +277,7 @@ l_km_err key_get_handle(ldacs_roles role, const char *owner1, const char *owner2
     // }
 cleanup:
     free(db_name);
+    free_queryid_result(qr_mk);
     return err;
 }
 
@@ -364,5 +370,6 @@ l_km_err revoke_key(ldacs_roles role, const char *owner1, const char *owner2, en
 
 cleanup:
     free(db_name);
+    free_queryid_result(qr_mk);
     return err;
 }

@@ -70,6 +70,7 @@ l_err recv_auc_rqst(buffer_t *buf, snf_entity_t *as_man) {
     ) {
         log_error("cant change state correctly, %d", err);
     }
+    free_buffer(rqst.N_1);
     return LD_OK;
 }
 
@@ -484,6 +485,8 @@ l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_man, KEY
     } else if (snf_obj.role == LD_AS) {
         snf_obj.trans_snp_func(as_man->AS_SAC, as_man->CURR_GS_SAC, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs), TRUE);
     }
+
+    free_buffer(sdu);
 
     return LD_OK;
 }
