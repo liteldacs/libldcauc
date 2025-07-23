@@ -302,6 +302,7 @@ int8_t upload_snf(uint8_t failed_type, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t
             }
         } else {
             to_trans_buf = in_buf;
+            log_buf(LOG_INFO, "SNP TO SEND", snp_buf, buf_len);
             if (failed_type) {
                 to_trans_buf = gen_failed_pkt(failed_type, as_man->AS_SAC, in_buf);
                 gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, &(gsnf_pkt_cn_t){

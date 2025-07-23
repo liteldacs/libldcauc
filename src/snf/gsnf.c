@@ -110,21 +110,26 @@ static l_err parse_gsg_data_pkt(buffer_t *pdu, gsg_data_t *data_pkt) {
 }
 
 l_err recv_gsnf(basic_conn_t *bc) {
+    if (!bc->read_pkt) {
+        log_warn("Read pkt is null");
+        return LD_ERR_NULL;
+    }
     gs_propt_t *gs_propt = (gs_propt_t *) bc;
-    log_buf(LOG_INFO, "RECV GSNF", gs_propt->bc.read_pkt.ptr, gs_propt->bc.read_pkt.len);
+    log_buf(LOG_INFO, "RECV GSNF", gs_propt->bc.read_pkt->ptr, gs_propt->bc.read_pkt->len);
     snf_entity_t *as_man;
-    uint8_t gsnf_type = *gs_propt->bc.read_pkt.ptr;
+    uint8_t gsnf_type = *gs_propt->bc.read_pkt->ptr;
 
     switch (gsnf_type) {
         case GSNF_INITIAL_AS: {
             gsnf_pkt_cn_ini_t *init_pkt = calloc(1, sizeof(gsnf_pkt_cn_ini_t));
-            PARSE_GSNF(&gs_propt->bc.read_pkt, init_pkt, gsnf_pkt_cn_ini_desc, GSNF_PKT_CN_INI_HEAD_LEN, 0);
+            PARSE_GSNF(gs_propt->bc.read_pkt, init_pkt, gsnf_pkt_cn_ini_desc, GSNF_PKT_CN_INI_HEAD_LEN, 0);
             if (has_enode_by_sac(init_pkt->AS_SAC) == FALSE && has_enode_by_ua(init_pkt->UA) == FALSE) {
                 if (register_snf_en(ROLE_SGW, init_pkt->AS_SAC, init_pkt->UA, init_pkt->GS_SAC) != LDCAUC_OK) {
                     log_warn("Can not register snf");
                     return LD_ERR_INTERNAL;
                 }
             } else {
+                log_warn("AS MAN or UA is already exist");
                 return LD_ERR_INTERNAL;
             }
 
@@ -146,7 +151,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
         case GSNF_AS_AUZ_INFO:
         case GSNF_KEY_TRANS: {
             gsnf_pkt_cn_t *gsnf_pkt = calloc(1, sizeof(gsnf_pkt_cn_t));
-            PARSE_GSNF(&gs_propt->bc.read_pkt, gsnf_pkt, gsnf_pkt_cn_desc, GSNF_PKT_CN_HEAD_LEN,
+            PARSE_GSNF(gs_propt->bc.read_pkt, gsnf_pkt, gsnf_pkt_cn_desc, GSNF_PKT_CN_HEAD_LEN,
                        gsnf_type == GSNF_AS_AUZ_INFO ? GSNF_AS_AUZ_INFO_PRE_LEN : 0);
             if ((as_man = (snf_entity_t *) get_enode(gsnf_pkt->AS_SAC)) == NULL) {
                 log_warn("AS MAN is NULL");
@@ -194,6 +199,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
                     break;
                 }
                 default: {
+                    log_error("Wrong GSNF Type");
                     return LD_ERR_WRONG_PARA;
                 }
             }
@@ -205,7 +211,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
             gsnf_st_chg_t *gsnf_pkt = calloc(1, sizeof(gsnf_st_chg_t));
             pb_stream gsnf_pbs;
             zero(&gsnf_pbs);
-            init_pbs(&gsnf_pbs, gs_propt->bc.read_pkt.ptr, gs_propt->bc.read_pkt.len, "GSNF IN");
+            init_pbs(&gsnf_pbs, gs_propt->bc.read_pkt->ptr, gs_propt->bc.read_pkt->len, "GSNF IN");
             if (!in_struct(gsnf_pkt, &gsnf_st_chg_desc, &gsnf_pbs, NULL)) {
                 log_error("Cannot parse gsnf pdu");
                 free(gsnf_pkt);
@@ -235,7 +241,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
             gsnf_key_upd_remind_t *gsnf_pkt = calloc(1, sizeof(gsnf_key_upd_remind_t));
             pb_stream gsnf_pbs;
             zero(&gsnf_pbs);
-            init_pbs(&gsnf_pbs, gs_propt->bc.read_pkt.ptr, gs_propt->bc.read_pkt.len, "GSNF IN");
+            init_pbs(&gsnf_pbs, gs_propt->bc.read_pkt->ptr, gs_propt->bc.read_pkt->len, "GSNF IN");
             if (!in_struct(gsnf_pkt, &gsnf_key_upd_remind_desc, &gsnf_pbs, NULL)) {
                 log_error("Cannot parse gsnf pdu");
                 free(gsnf_pkt);
@@ -253,6 +259,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
             break;
         }
         default: {
+            log_error("Wrong GSNF type");
             return LD_ERR_WRONG_PARA;
         }
     }
@@ -260,9 +267,10 @@ l_err recv_gsnf(basic_conn_t *bc) {
 }
 
 l_err recv_gsg(basic_conn_t *bc) {
+    if (!bc->read_pkt)  return LD_ERR_NULL;
     gs_propt_t *mlt_ld = (gs_propt_t *) bc;
-    log_buf(LOG_INFO, "RECV GSG", mlt_ld->bc.read_pkt.ptr, mlt_ld->bc.read_pkt.len);
-    switch ((*mlt_ld->bc.read_pkt.ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN))) {
+    log_buf(LOG_INFO, "RECV GSG", mlt_ld->bc.read_pkt->ptr, mlt_ld->bc.read_pkt->len);
+    switch ((*mlt_ld->bc.read_pkt->ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN))) {
         case GS_INITIAL_MSG:
             break;
         //        case GS_SAC_RESP: {
@@ -317,7 +325,7 @@ l_err recv_gsg(basic_conn_t *bc) {
         case GS_KEY_TRANS: {
             gsg_pkt_t *gsnf_pkg;
             snf_entity_t *as_man;
-            if (parse_gsg_pkt(&mlt_ld->bc.read_pkt, &gsnf_pkg, &as_man) != LD_OK) {
+            if (parse_gsg_pkt(mlt_ld->bc.read_pkt, &gsnf_pkg, &as_man) != LD_OK) {
                 return LD_ERR_INTERNAL;
             }
             switch (gsnf_pkg->TYPE) {
@@ -370,7 +378,7 @@ l_err recv_gsg(basic_conn_t *bc) {
         }
         case GS_SAC_RESP: {
             gsg_sac_resp_t resp;
-            if (parse_gsg_sac_reqp_pkt(&mlt_ld->bc.read_pkt, &resp) != LD_OK) {
+            if (parse_gsg_sac_reqp_pkt(mlt_ld->bc.read_pkt, &resp) != LD_OK) {
                 return LD_ERR_INTERNAL;
             };
             if (snf_obj.setup_entity_func) {
@@ -381,7 +389,7 @@ l_err recv_gsg(basic_conn_t *bc) {
         }
         case GS_DATA_UP: {
             gsg_data_t data_pkt;
-            if (parse_gsg_data_pkt(&mlt_ld->bc.read_pkt, &data_pkt) != LD_OK) {
+            if (parse_gsg_data_pkt(mlt_ld->bc.read_pkt, &data_pkt) != LD_OK) {
                 return LD_ERR_INTERNAL;
             }
             snf_obj.trans_snp_func(data_pkt.AS_SAC, snf_obj.GS_SAC, data_pkt.sdu->ptr, data_pkt.sdu->len, FALSE);
