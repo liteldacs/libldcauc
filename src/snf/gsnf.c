@@ -77,7 +77,7 @@ static l_err parse_gsg_pkt(buffer_t *pdu, gsg_pkt_t **gsnf_pkg_ptr, snf_entity_t
 
     *as_man = (snf_entity_t *) get_enode(gsnf_pkg->AS_SAC);
 
-    log_buf(LOG_INFO, "RECV GSG SDU", gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
+    // log_buf(LOG_INFO, "RECV GSG SDU", gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len);
     return LD_OK;
 }
 
@@ -267,7 +267,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
 }
 
 l_err recv_gsg(basic_conn_t *bc) {
-    if (!bc->read_pkt)  return LD_ERR_NULL;
+    if (!bc->read_pkt) return LD_ERR_NULL;
     gs_propt_t *mlt_ld = (gs_propt_t *) bc;
     log_buf(LOG_INFO, "RECV GSG", mlt_ld->bc.read_pkt->ptr, mlt_ld->bc.read_pkt->len);
     switch ((*mlt_ld->bc.read_pkt->ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN))) {
