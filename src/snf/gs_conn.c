@@ -102,7 +102,8 @@ l_err gs_conn_accept(net_ctx_t *ctx) {
         return LD_ERR_INTERNAL;
     }
 
-    int client_port = ntohs(((struct sockaddr_in *) &gs_conn->bc.saddr)->sin_port);
+    // uint16_t client_port = ntohs(((struct sockaddr_in *) &gs_conn->bc.saddr)->sin_port);
+    uint16_t client_port = get_port(&gs_conn->bc);
 
     for (int i = 0; gs_conn_service.conn_defines[i].addr != NULL; i++) {
         if (client_port == gs_conn_service.conn_defines[i].port) {
