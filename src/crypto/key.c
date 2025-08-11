@@ -155,18 +155,20 @@ l_km_err embed_rootkey(ldacs_roles role, const char *as_ua, const char *sgw_ua) 
     if (query_result_as != NULL) {
         if ((err = enable_key(db_name, table_name, query_result_as->ids[0])) != LD_KM_OK) {
             log_error("enable key failed\n");
+            free_queryid_result(query_result_as);
             goto cleanup;
         }
     } else {
         log_error("query failed");
+        free_queryid_result(query_result_as);
         err = LD_ERR_KM_QUERY; // 查询失败
         goto cleanup;
     }
 
+    free_queryid_result(query_result_as);
     log_info("embed OK!");
 cleanup:
     free(db_name);
-    free_queryid_result(query_result_as);
     return err;
 }
 
