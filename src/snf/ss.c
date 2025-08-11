@@ -264,10 +264,10 @@ l_err finish_auc(void *args) {
         if (!save) return LD_ERR_NULL;
         bc = &save->bc;
     }
-    if (!bc || bc->opt->send_handler(bc, &(gsnf_pkt_cn_t){
+    if (!bc || bc->opt->send_handler(bc, gen_pdu( &(gsnf_pkt_cn_t){
                                          GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
                                          sdu
-                                     }, &gsnf_pkt_cn_desc, generate_auz_info, &as_man->AS_SAC
+                                     }, &gsnf_pkt_cn_desc, "GSNF KEY TRANS"), generate_auz_info, &as_man->AS_SAC
         ) != LD_OK) {
         log_warn("SGW send GS key failed");
         free_buffer(sdu);
@@ -395,10 +395,10 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *en) {
         bc = &save->bc;
     }
     //接收到RESP之后向目的GS发送KEY
-    if (!bc || bc->opt->send_handler(bc, &(gsnf_pkt_cn_t){
+    if (!bc || bc->opt->send_handler(bc, gen_pdu( &(gsnf_pkt_cn_t){
                                          GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, en->AS_SAC, ELE_TYP_8,
                                          sdu
-                                     }, &gsnf_pkt_cn_desc, NULL, NULL
+                                     }, &gsnf_pkt_cn_desc, "GSNF KEY TRANS"), NULL, NULL
         )) {
         log_warn("SGW send GS key failed");
         free_buffer(sdu);
@@ -478,10 +478,10 @@ l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_man, KEY
     if (snf_obj.role == LD_SGW) {
         CLONE_TO_CHUNK(*sdu, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs))
         as_man->gs_conn->bc.opt->send_handler(&as_man->gs_conn->bc,
-                                              &(gsnf_pkt_cn_t){
+                                              gen_pdu(&(gsnf_pkt_cn_t){
                                                   GSNF_SNF_UPLOAD, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_F, sdu
                                               },
-                                              &gsnf_pkt_cn_desc, NULL, NULL);
+                                              &gsnf_pkt_cn_desc, "GSNF SNF UPLOAD"), NULL, NULL);
     } else if (snf_obj.role == LD_AS) {
         snf_obj.trans_snp_func(as_man->AS_SAC, as_man->CURR_GS_SAC, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs), TRUE);
     }
