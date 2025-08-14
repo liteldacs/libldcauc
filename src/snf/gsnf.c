@@ -377,6 +377,7 @@ l_err recv_gsg(basic_conn_t *bc) {
             break;
         }
         case GS_SAC_RESP: {
+
             gsg_sac_resp_t resp;
             if (parse_gsg_sac_reqp_pkt(mlt_ld->bc.read_pkt, &resp) != LD_OK) {
                 return LD_ERR_INTERNAL;
