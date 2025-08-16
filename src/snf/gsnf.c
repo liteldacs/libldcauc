@@ -130,7 +130,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
                 }
             } else {
                 log_warn("AS MAN or UA is already exist");
-                return LD_ERR_INTERNAL;
+                // return LD_ERR_INTERNAL;
             }
 
             if ((as_man = (snf_entity_t *) get_enode(init_pkt->AS_SAC)) == NULL) {
