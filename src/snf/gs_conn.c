@@ -94,7 +94,9 @@ void *gs_conn_connect(net_ctx_t *ctx, char *remote_addr, int remote_port, int lo
 
 
 l_err gs_conn_accept(net_ctx_t *ctx) {
+
     gs_propt_t *gs_conn = malloc(sizeof(gs_propt_t));
+
 
     if (init_basic_conn(&gs_conn->bc, ctx, LD_TCP_SERVER) == FALSE) {
         log_error("Cannot initialize connection!");
