@@ -246,8 +246,9 @@ static l_err generate_auz_info(buffer_t *buf, void *args) {
 
 l_err finish_auc(void *args) {
     //the auth has done
-    log_info("+++++++++++++===== GS AUTH AS OK =====++++++++++++++");
     snf_entity_t *as_man = args;
+
+    log_info("AS { %d } finishes auth", as_man->AS_SAC);
     buffer_t *sdu = gen_pdu(&(gs_key_trans_t){
                                 . key = as_man->key_as_gs_b,
                                 . nonce = as_man->shared_random

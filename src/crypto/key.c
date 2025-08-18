@@ -166,7 +166,6 @@ l_km_err embed_rootkey(ldacs_roles role, const char *as_ua, const char *sgw_ua) 
     }
 
     free_queryid_result(query_result_as);
-    log_info("embed OK!");
 cleanup:
     free(db_name);
     return err;

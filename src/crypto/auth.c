@@ -189,8 +189,6 @@ generate_auc_kdf(ldacs_roles role, buffer_t *random, void **key_as_sgw, void **k
     get_ua_str(GS_FLAG, ua_gs);
     get_ua_str(DFT_SGW_UA, ua_sgw);
 
-    log_error("!!!!!! %d %d", AS_UA, DFT_SGW_UA);
-
     switch (role) {
         case LD_AS:
             as_derive_keys(random->ptr, random->len, ua_as, ua_gs, ua_sgw, key_as_sgw, key_as_gs);

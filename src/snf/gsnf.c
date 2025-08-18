@@ -115,7 +115,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
         return LD_ERR_NULL;
     }
     gs_propt_t *gs_propt = (gs_propt_t *) bc;
-    log_buf(LOG_INFO, "RECV GSNF", gs_propt->bc.read_pkt->ptr, gs_propt->bc.read_pkt->len);
+    // log_buf(LOG_INFO, "RECV GSNF", gs_propt->bc.read_pkt->ptr, gs_propt->bc.read_pkt->len);
     snf_entity_t *as_man;
     uint8_t gsnf_type = *gs_propt->bc.read_pkt->ptr;
 
@@ -219,7 +219,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
             }
             switch (gsnf_pkt->State) {
                 case GSNF_ACCESS: {
-                    log_info("Successfully Access In");
+                    log_info("================ AS { %d } has accessed in ================", gsnf_pkt->AS_SAC);
                     break;
                 }
                 case GSNF_EXIT: {
@@ -269,7 +269,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
 l_err recv_gsg(basic_conn_t *bc) {
     if (!bc->read_pkt) return LD_ERR_NULL;
     gs_propt_t *mlt_ld = (gs_propt_t *) bc;
-    log_buf(LOG_INFO, "RECV GSG", mlt_ld->bc.read_pkt->ptr, mlt_ld->bc.read_pkt->len);
+    // log_buf(LOG_INFO, "RECV GSG", mlt_ld->bc.read_pkt->ptr, mlt_ld->bc.read_pkt->len);
     switch ((*mlt_ld->bc.read_pkt->ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN))) {
         case GS_INITIAL_MSG:
             break;
