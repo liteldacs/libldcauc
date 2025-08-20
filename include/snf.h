@@ -335,7 +335,7 @@ typedef struct gsg_sac_resp_s {
 } gsg_sac_resp_t;
 
 typedef struct gsg_data_s {
-    uint8_t TYPE;
+    uint8_t VER;
     uint16_t AS_SAC;
     uint8_t IDTF;
     buffer_t *sdu;
