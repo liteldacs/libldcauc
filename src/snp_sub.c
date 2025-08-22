@@ -20,6 +20,7 @@ static bool is_finish_auth(uint16_t AS_SAC) {
             return in_state(&snf_en->auth_fsm, authc_str);
         }
         case LD_GS: {
+            log_warn("!!!!!!!!!!!!! %d %p", AS_SAC, snf_en);
             return snf_en->gs_finish_auth;
         }
         default: {

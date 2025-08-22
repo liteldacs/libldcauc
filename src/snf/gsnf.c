@@ -377,7 +377,6 @@ l_err recv_gsg(basic_conn_t *bc) {
             break;
         }
         case GS_SAC_RESP: {
-
             gsg_sac_resp_t resp;
             if (parse_gsg_sac_reqp_pkt(mlt_ld->bc.read_pkt, &resp) != LD_OK) {
                 return LD_ERR_INTERNAL;
@@ -385,7 +384,6 @@ l_err recv_gsg(basic_conn_t *bc) {
             if (snf_obj.setup_entity_func) {
                 snf_obj.setup_entity_func(resp.AS_SAC, resp.AS_UA);
             }
-            // inside_combine_sac_response(resp.AS_SAC, resp.AS_UA);
             break;
         }
         case GS_DATA_UP: {
