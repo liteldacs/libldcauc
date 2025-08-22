@@ -46,7 +46,7 @@ bool reset_gs_conn(basic_conn_t *bc);
 
 void gs_conn_close(basic_conn_t *bc);
 
-l_err gs_conn_accept(net_ctx_t *ctx);
+l_err gs_conn_accept(net_ctx_t *ctx, int fd, struct sockaddr_storage *saddr);
 
 void *gs_conn_connect(net_ctx_t *ctx, char *remote_addr, int remote_port, int local_port);
 

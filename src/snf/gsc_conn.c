@@ -35,11 +35,11 @@ bool send_gsc_pkt(basic_conn_t *bcp) {
     return TRUE;
 }
 
-l_err gsc_conn_accept(net_ctx_t *ctx) {
+l_err gsc_conn_accept(net_ctx_t *ctx, int fd, struct sockaddr_storage* saddr) {
     if (gsc_conn_service.gsc_conn) return LD_ERR_INTERNAL;
     gsc_conn_service.gsc_conn = malloc(sizeof(gsc_propt_t));
 
-    if (init_basic_conn(&gsc_conn_service.gsc_conn->bc, ctx, LD_TCPV6_SERVER) == FALSE) {
+    if (init_basic_conn_server(&gsc_conn_service.gsc_conn->bc, ctx, LD_TCPV6_SERVER, fd, saddr) == FALSE) {
         log_error("Cannot initialize connection!");
         free(gsc_conn_service.gsc_conn);
         return LD_ERR_INTERNAL;

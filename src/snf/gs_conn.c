@@ -85,7 +85,7 @@ void *gs_conn_connect(net_ctx_t *ctx, char *remote_addr, int remote_port, int lo
     gs_conn->bc.remote_port = remote_port;
     gs_conn->bc.local_port = local_port;
 
-    if (init_basic_conn(&gs_conn->bc, ctx, snf_obj.is_merged ? LD_TCPV6_CLIENT : LD_TCP_CLIENT) == FALSE) {
+    if (init_basic_conn_client(&gs_conn->bc, ctx, snf_obj.is_merged ? LD_TCPV6_CLIENT : LD_TCP_CLIENT) == FALSE) {
         return NULL;
     }
 
@@ -93,12 +93,12 @@ void *gs_conn_connect(net_ctx_t *ctx, char *remote_addr, int remote_port, int lo
 }
 
 
-l_err gs_conn_accept(net_ctx_t *ctx) {
+l_err gs_conn_accept(net_ctx_t *ctx, int fd, struct sockaddr_storage *saddr) {
 
     gs_propt_t *gs_conn = malloc(sizeof(gs_propt_t));
 
 
-    if (init_basic_conn(&gs_conn->bc, ctx, LD_TCP_SERVER) == FALSE) {
+    if (init_basic_conn_server(&gs_conn->bc, ctx, LD_TCP_SERVER, fd, saddr) == FALSE) {
         log_error("Cannot initialize connection!");
         free(gs_conn);
         return LD_ERR_INTERNAL;

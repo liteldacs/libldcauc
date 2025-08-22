@@ -42,11 +42,12 @@ l_err init_server_gsc_conn_service(int listen_port);
 
 bool send_gsc_pkt(basic_conn_t *bc);
 
+l_err gsc_conn_accept(net_ctx_t *ctx, int fd, struct sockaddr_storage* saddr);
+
 bool reset_gsc_conn(basic_conn_t *bc);
 
 void gsc_conn_close(basic_conn_t *bc);
 
-l_err gsc_conn_accept(net_ctx_t *ctx);
 
 // void *gsc_conn_connect(net_ctx_t *ctx, char *remote_addr, int remote_port, int local_port);
 
