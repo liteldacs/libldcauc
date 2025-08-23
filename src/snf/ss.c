@@ -8,8 +8,9 @@
 #include "crypto/authc.h"
 #include "crypto/key.h"
 #include <ld_santilizer.h>
-
 #include "gsc_conn.h"
+
+pthread_t data_th;
 
 
 /**
@@ -412,7 +413,6 @@ l_err recv_failed_msg(buffer_t *buf, snf_entity_t *as_man) {
     log_error("GS has received Failed Message.");
     return LD_OK;
 }
-
 
 l_err send_sn_session_est_resp(void *args) {
     snf_entity_t *as_man = args;

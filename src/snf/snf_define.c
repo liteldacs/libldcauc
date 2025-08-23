@@ -300,6 +300,7 @@ static field_desc gsg_data_fields[] = {
 struct_desc_t gsg_data_desc = {"GSG DATA", gsg_data_fields};
 
 
+
 size_t as_recv_handlers_sz = 3;
 ss_recv_handler_t as_recv_handlers[] = {
     {AUC_RESP, recv_auc_resp},
