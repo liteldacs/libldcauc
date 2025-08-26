@@ -11,6 +11,8 @@ static bool is_finish_auth(uint16_t AS_SAC) {
     snf_entity_t *snf_en = snf_obj.role == LD_AS
                                ? snf_obj.as_snf_en
                                : (snf_entity_t *) get_enode(AS_SAC);
+
+    if (!snf_en) return FALSE;
     switch (snf_obj.role) {
         case LD_AS:
         case LD_SGW: {

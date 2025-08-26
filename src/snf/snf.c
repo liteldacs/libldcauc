@@ -78,7 +78,7 @@ void init_gs_snf_layer_unmerged(
     snf_obj.register_fail_func = register_fail;
     snf_obj.gst_ho_complete_key_func = finish_ho;
 
-        // log_buf(LOG_WARN, "ADDR", config->gsnf_addr, 16);
+    // log_buf(LOG_WARN, "ADDR", config->gsnf_addr, 16);
     if (init_client_gs_conn_service(config->gsnf_addr, config->gsnf_remote_port, config->gsnf_local_port, recv_gsnf)
         != LD_OK) {
         log_warn("Cannot init GS connection service");
@@ -236,15 +236,15 @@ int8_t exit_snf_en(uint16_t AS_SAC) {
     if (snf_obj.role != ROLE_GS) return LDCAUC_WRONG_ROLE;
     snf_obj.is_merged == FALSE
         ? gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsnf_st_chg_t){
-                                                             .G_TYP = GSNF_STATE_CHANGE,
-                                                             .VER = DEFAULT_GSNF_VERSION,
-                                                             .AS_SAC = AS_SAC,
-                                                             .State = GSNF_EXIT,
-                                                             .GS_SAC = snf_obj.GS_SAC
-                                                         }, &gsnf_st_chg_desc, "GSNF_STATE_CHANGE"), NULL, NULL)
+                                                                 .G_TYP = GSNF_STATE_CHANGE,
+                                                                 .VER = DEFAULT_GSNF_VERSION,
+                                                                 .AS_SAC = AS_SAC,
+                                                                 .State = GSNF_EXIT,
+                                                                 .GS_SAC = snf_obj.GS_SAC
+                                                             }, &gsnf_st_chg_desc, "GSNF_STATE_CHANGE"), NULL, NULL)
         : gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc,
-                                                         gen_pdu( &(gsg_as_exit_t){GS_AS_EXIT, AS_SAC},
-                                                         &gsg_as_exit_desc, "GS_AS_EXIT"), NULL, NULL);
+                                                         gen_pdu(&(gsg_as_exit_t){GS_AS_EXIT, AS_SAC},
+                                                                 &gsg_as_exit_desc, "GS_AS_EXIT"), NULL, NULL);
     return delete_enode_by_sac(AS_SAC, clear_snf_en);
 }
 
@@ -272,9 +272,9 @@ int8_t upload_snf(uint8_t failed_type, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t
             // send failed message to SGW
             if (failed_type) {
                 to_trans_buf = gen_failed_pkt(failed_type, as_man->AS_SAC, in_buf);
-                gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsg_pkt_t){
-                                                                   GS_SNF_DOWNLOAD, as_man->AS_SAC, to_trans_buf
-                                                               }, &gsg_pkt_desc, "GS SNF DOWNLOAD"), NULL, NULL);
+                gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsg_pkt_t){
+                                                                       GS_SNF_DOWNLOAD, as_man->AS_SAC, to_trans_buf
+                                                                   }, &gsg_pkt_desc, "GS SNF DOWNLOAD"), NULL, NULL);
             } else {
                 uint8_t type;
                 to_trans_buf = in_buf;
@@ -292,14 +292,16 @@ int8_t upload_snf(uint8_t failed_type, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t
                     }
                 }
                 if (as_man->gsnf_count++ == 0) {
-                    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsg_ini_pkt_t){
-                                                                       type, as_man->AS_SAC, as_man->AS_UA, GS_SAC,
-                                                                       to_trans_buf
-                                                                   }, &gsg_ini_pkt_desc, "GSG INIT PKT"), NULL, NULL);
+                    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(
+                                                                       &(gsg_ini_pkt_t){
+                                                                           type, as_man->AS_SAC, as_man->AS_UA, GS_SAC,
+                                                                           to_trans_buf
+                                                                       }, &gsg_ini_pkt_desc, "GSG INIT PKT"), NULL,
+                                                                   NULL);
                 } else {
-                    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsg_pkt_t){
-                                                                       type, as_man->AS_SAC, to_trans_buf
-                                                                   }, &gsg_pkt_desc, "GSG PKT"), NULL, NULL);
+                    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsg_pkt_t){
+                                                                           type, as_man->AS_SAC, to_trans_buf
+                                                                       }, &gsg_pkt_desc, "GSG PKT"), NULL, NULL);
                 }
             }
         } else {
@@ -307,23 +309,31 @@ int8_t upload_snf(uint8_t failed_type, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t
             log_buf(LOG_INFO, "SNP TO SEND", snp_buf, buf_len);
             if (failed_type) {
                 to_trans_buf = gen_failed_pkt(failed_type, as_man->AS_SAC, in_buf);
-                gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsnf_pkt_cn_t){
-                                                                   GSNF_SNF_DOWNLOAD, DEFAULT_GSNF_VERSION, AS_SAC,
-                                                                   0xFF,
-                                                                   to_trans_buf
-                                                               }, &gsnf_pkt_cn_desc, "GSNF SNF DOWNLOAD"), NULL, NULL);
+                gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsnf_pkt_cn_t){
+                                                                       GSNF_SNF_DOWNLOAD, DEFAULT_GSNF_VERSION, AS_SAC,
+                                                                       0xFF,
+                                                                       to_trans_buf
+                                                                   }, &gsnf_pkt_cn_desc, "GSNF SNF DOWNLOAD"), NULL,
+                                                               NULL);
                 // free_buffer(to_trans_buf);
             } else {
                 if (as_man->gsnf_count++ == 0) {
-                    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsnf_pkt_cn_ini_t){
-                                                                       GSNF_INITIAL_AS, DEFAULT_GSNF_VERSION, AS_SAC,
-                                                                       as_man->AS_UA, GS_SAC, ELE_TYP_F, to_trans_buf
-                                                                   }, &gsnf_pkt_cn_ini_desc, "GSNF PKT CN INI"), NULL, NULL);
+                    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(
+                                                                       &(gsnf_pkt_cn_ini_t){
+                                                                           GSNF_INITIAL_AS, DEFAULT_GSNF_VERSION,
+                                                                           AS_SAC,
+                                                                           as_man->AS_UA, GS_SAC, ELE_TYP_F,
+                                                                           to_trans_buf
+                                                                       }, &gsnf_pkt_cn_ini_desc, "GSNF PKT CN INI"),
+                                                                   NULL, NULL);
                 } else {
-                    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsnf_pkt_cn_t){
-                                                                       GSNF_SNF_DOWNLOAD, DEFAULT_GSNF_VERSION, AS_SAC,
-                                                                       ELE_TYP_F, to_trans_buf
-                                                                   }, &gsnf_pkt_cn_desc, "GSNF PKT CN"), NULL, NULL);
+                    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(
+                                                                       &(gsnf_pkt_cn_t){
+                                                                           GSNF_SNF_DOWNLOAD, DEFAULT_GSNF_VERSION,
+                                                                           AS_SAC,
+                                                                           ELE_TYP_F, to_trans_buf
+                                                                       }, &gsnf_pkt_cn_desc, "GSNF PKT CN"), NULL,
+                                                                   NULL);
                 }
             }
         }
@@ -341,9 +351,9 @@ int8_t upload_snf(uint8_t failed_type, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t
 
 int8_t gss_handover_request_trigger(uint16_t AS_SAC, uint16_t GSS_SAC, uint16_t GST_SAC) {
     if (snf_obj.is_merged == TRUE)
-        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsg_ho_req_t){
-                                                           GS_HO_REQUEST, AS_SAC, GSS_SAC, GST_SAC,
-                                                       }, &gsg_ho_req_desc, "GS HO REQUEST"), NULL, NULL);
+        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsg_ho_req_t){
+                                                               GS_HO_REQUEST, AS_SAC, GSS_SAC, GST_SAC,
+                                                           }, &gsg_ho_req_desc, "GS HO REQUEST"), NULL, NULL);
     return LDCAUC_OK;
 }
 
@@ -351,34 +361,35 @@ int8_t gss_handover_request_trigger(uint16_t AS_SAC, uint16_t GSS_SAC, uint16_t 
 int8_t gst_handover_request_handle(uint16_t AS_SAC, uint32_t AS_UA, uint16_t GSS_SAC, uint16_t GST_SAC) {
     register_snf_en(ROLE_GS, AS_SAC, AS_UA, GSS_SAC);
     if (snf_obj.is_merged) {
-        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsg_ho_req_t){
-                                                           GS_HO_REQUEST, AS_SAC, GSS_SAC, GST_SAC,
-                                                       }, &gsg_ho_req_desc, "GS HO REQUEST"), NULL, NULL);
+        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsg_ho_req_t){
+                                                               GS_HO_REQUEST, AS_SAC, GSS_SAC, GST_SAC,
+                                                           }, &gsg_ho_req_desc, "GS HO REQUEST"), NULL, NULL);
     } else {
         /* GS SAC for current GS (before handover) */
-        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsnf_key_upd_remind_t){
-                                                           GSNF_KEY_UPD_REMIND, DEFAULT_GSNF_VERSION, AS_SAC, ELE_TYP_C,
-                                                           GSS_SAC, GST_SAC
-                                                       }, &gsnf_key_upd_remind_desc, "GSNF KEY UPD"), NULL, NULL);
+        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsnf_key_upd_remind_t){
+                                                               GSNF_KEY_UPD_REMIND, DEFAULT_GSNF_VERSION, AS_SAC,
+                                                               ELE_TYP_C,
+                                                               GSS_SAC, GST_SAC
+                                                           }, &gsnf_key_upd_remind_desc, "GSNF KEY UPD"), NULL, NULL);
     }
     return LDCAUC_OK;
 }
 
 int8_t gst_handover_complete(uint16_t AS_SAC) {
     if (snf_obj.is_merged) {
-        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsg_ho_cplt_t){
-                                                           .TYPE = GS_HO_COMPLETE,
-                                                           .AS_SAC = AS_SAC,
-                                                           .GS_SAC = snf_obj.GS_SAC
-                                                       }, &gsg_ho_cplt_desc, "GS HO COMPLETE"), NULL, NULL);
+        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsg_ho_cplt_t){
+                                                               .TYPE = GS_HO_COMPLETE,
+                                                               .AS_SAC = AS_SAC,
+                                                               .GS_SAC = snf_obj.GS_SAC
+                                                           }, &gsg_ho_cplt_desc, "GS HO COMPLETE"), NULL, NULL);
     } else {
-        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsnf_st_chg_t){
-                                                           .G_TYP = GSNF_STATE_CHANGE,
-                                                           .VER = DEFAULT_GSNF_VERSION,
-                                                           .AS_SAC = AS_SAC,
-                                                           .State = GSNF_SWITCH,
-                                                           .GS_SAC = snf_obj.GS_SAC
-                                                       }, &gsnf_st_chg_desc, "GSNF SWITCH" ), NULL, NULL);
+        gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsnf_st_chg_t){
+                                                               .G_TYP = GSNF_STATE_CHANGE,
+                                                               .VER = DEFAULT_GSNF_VERSION,
+                                                               .AS_SAC = AS_SAC,
+                                                               .State = GSNF_SWITCH,
+                                                               .GS_SAC = snf_obj.GS_SAC
+                                                           }, &gsnf_st_chg_desc, "GSNF SWITCH"), NULL, NULL);
     }
     return LDCAUC_OK;
 }
@@ -386,17 +397,17 @@ int8_t gst_handover_complete(uint16_t AS_SAC) {
 
 int8_t inside_combine_sac_request(uint32_t UA) {
     if (!snf_obj.is_e304) return LDCAUC_WRONG_PARA;
-    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(struct gsg_sac_rqst_s){
-                                                       GS_SAC_RQST, UA,
-                                                   }, &gsg_sac_rqst_desc, "GS SAC RQST"), NULL, NULL);
+    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(struct gsg_sac_rqst_s){
+                                                           GS_SAC_RQST, UA,
+                                                       }, &gsg_sac_rqst_desc, "GS SAC RQST"), NULL, NULL);
     return LDCAUC_OK;
 }
 
 int8_t inside_combine_update_user_msg(uint16_t AS_SAC, uint8_t *snp_buf, size_t buf_len) {
     buffer_t *in_buf = init_buffer_unptr();
     CLONE_TO_CHUNK(*in_buf, snp_buf, buf_len);
-    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu( &(gsg_data_t){
-                                                       GS_DATA_DOWN, AS_SAC, 0, in_buf
-                                                   }, &gsg_data_desc, "GS DATA DOWN"), NULL, NULL);
+    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsg_data_t){
+                                                           GS_DATA_DOWN, AS_SAC, 0, in_buf
+                                                       }, &gsg_data_desc, "GS DATA DOWN"), NULL, NULL);
     return LDCAUC_OK;
 }
