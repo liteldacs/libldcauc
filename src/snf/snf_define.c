@@ -327,6 +327,7 @@ struct hashmap *init_enode_map() {
 }
 
 const void *set_enode(snf_entity_t *en) {
+
     if (!en) return NULL;
 
     const void *ret = hashmap_set(snf_obj.snf_emap, en);

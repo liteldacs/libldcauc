@@ -266,6 +266,9 @@ l_err finish_auc(void *args) {
         if (!save) return LD_ERR_NULL;
         bc = &save->bc;
     }
+
+    log_warn("%d %d", as_man->key_as_gs_b->len, as_man->shared_random->len);
+
     if (!bc || bc->opt->send_handler(bc, gen_pdu(&(gsnf_pkt_cn_t){
                                                      GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
                                                      sdu
@@ -379,6 +382,8 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *en) {
     sgw_update_mkey(ua_sgw, gss_sac, gst_sac, ua_as, en->shared_random, &en->key_as_gs_b);
 
     usleep(10000);
+
+    log_warn("%d %d", en->key_as_gs_b->len, en->shared_random->len);
 
     en->CURR_GS_SAC = key_upd_resp.SAC_dst;
     buffer_t *sdu = gen_pdu(&(gs_key_trans_t){

@@ -397,9 +397,11 @@ int8_t gst_handover_complete(uint16_t AS_SAC) {
 
 int8_t inside_combine_sac_request(uint32_t UA) {
     if (!snf_obj.is_e304) return LDCAUC_WRONG_PARA;
+    log_warn("!!!!!!!!!!!!!!");
     gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(struct gsg_sac_rqst_s){
                                                            GS_SAC_RQST, UA,
                                                        }, &gsg_sac_rqst_desc, "GS SAC RQST"), NULL, NULL);
+    log_warn("!!!!!!!!!!!!!!");
     return LDCAUC_OK;
 }
 

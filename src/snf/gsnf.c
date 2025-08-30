@@ -72,6 +72,7 @@ static l_err parse_gsg_pkt(buffer_t *pdu, gsg_pkt_t **gsnf_pkg_ptr, snf_entity_t
     }
 
     if (has_enode_by_sac(gsnf_pkg->AS_SAC) == FALSE) {
+        log_error("SAC has been in this GS");
         return LD_ERR_INVALID;
     }
 
@@ -177,6 +178,7 @@ l_err recv_gsnf(basic_conn_t *bc) {
 
                     init_pbs(&pbs, gsnf_pkt->sdu->ptr, gsnf_pkt->sdu->len, "GS KEY GET");
                     if (in_struct(&key_trans, &gs_key_trans_desc, &pbs, NULL) == FALSE) {
+                        log_error("Cannot parse key trans");
                         return LD_ERR_INTERNAL;
                     }
 
@@ -322,11 +324,11 @@ l_err recv_gsg(basic_conn_t *bc) {
         //        }
         case GS_SNF_UPLOAD:
         case GS_SNF_DOWNLOAD:
-        case GS_UP_UPLOAD_TRANSPORT:
-        case GS_KEY_TRANS: {
+        case GS_UP_UPLOAD_TRANSPORT:{
             gsg_pkt_t *gsnf_pkg;
             snf_entity_t *as_man;
             if (parse_gsg_pkt(mlt_ld->bc.read_pkt, &gsnf_pkg, &as_man) != LD_OK) {
+                log_error("Cannot parse gsnf pdu %d", (*mlt_ld->bc.read_pkt->ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN)));
                 return LD_ERR_INTERNAL;
             }
             switch (gsnf_pkg->TYPE) {
@@ -340,41 +342,66 @@ l_err recv_gsg(basic_conn_t *bc) {
                     handle_recv_msg(gsnf_pkg->sdu, as_man);
                     break;
                 }
-                case GS_KEY_TRANS: {
-                    pb_stream pbs;
-                    gs_key_trans_t key_trans = {
-                        .key = init_buffer_ptr(ROOT_KEY_LEN),
-                        .nonce = init_buffer_ptr(NONCE_LEN)
-                    };
-
-                    init_pbs(&pbs, gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len, "GS KEY GET");
-                    if (in_struct(&key_trans, &gs_key_trans_desc, &pbs, NULL) == FALSE) {
-                        return LD_ERR_INTERNAL;
-                    }
-
-                    UA_STR(ua_as);
-                    UA_STR(ua_gs);
-                    get_ua_str(as_man->AS_UA, ua_as);
-                    get_ua_str(as_man->CURR_GS_SAC, ua_gs);
-
-                    key_install(key_trans.key, ua_as, ua_gs, key_trans.nonce->ptr, key_trans.nonce->len,
-                                &as_man->key_as_gs_h);
-
-                    /* 未来使用切换状态机， 抛弃这种方法*/
-                    if (snf_obj.GS_SAC != as_man->CURR_GS_SAC) {
-                        snf_obj.gst_ho_complete_key_func(as_man->AS_SAC, as_man->AS_UA, as_man->CURR_GS_SAC);
-                    }
-
-                    free_buffer(key_trans.key);
-                    free_buffer(key_trans.nonce);
-                    as_man->gs_finish_auth = TRUE;
-                    break;
-                }
                 default: {
                     return LD_ERR_WRONG_PARA;
                 }
             }
             free_gsg_pkg(gsnf_pkg);
+            break;
+        }
+        case GS_KEY_TRANS: {
+            // gsg_pkt_t *gsnf_pkg = NULL;
+            // PARSE_DSTR_PKT(mlt_ld->bc.read_pkt, gsnf_pkg, sdu, gsg_pkt_desc, GSG_PKT_HEAD_LEN, 0);
+            // if (!gsnf_pkg) {
+            //     log_error("Cannot parse KET TRANS");
+            //     return LD_ERR_INTERNAL;
+            // }
+            //
+            // register_snf_en(ROLE_GS, gsnf_pkg->AS_SAC, 0, snf_obj.GS_SAC);
+            // snf_entity_t *as_man = get_enode(gsnf_pkg->AS_SAC);
+
+            // 改，用当前GS中是否存在as,判断是否为更新
+
+            gsg_pkt_t *gsnf_pkg;
+            snf_entity_t *as_man;
+            if (parse_gsg_pkt(mlt_ld->bc.read_pkt, &gsnf_pkg, &as_man) != LD_OK) {
+                log_error("Cannot parse gsnf pdu %d", (*mlt_ld->bc.read_pkt->ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN)));
+                return LD_ERR_INTERNAL;
+            }
+
+            log_warn("!!!!!!! %d", as_man->AS_SAC);
+
+            pb_stream pbs;
+            gs_key_trans_t key_trans = {
+                .key = init_buffer_ptr(ROOT_KEY_LEN),
+                .nonce = init_buffer_ptr(NONCE_LEN)
+            };
+
+            init_pbs(&pbs, gsnf_pkg->sdu->ptr, gsnf_pkg->sdu->len, "GS KEY GET");
+            if (in_struct(&key_trans, &gs_key_trans_desc, &pbs, NULL) == FALSE) {
+                log_error("Cannot parse key trans");
+                return LD_ERR_INTERNAL;
+            }
+
+            UA_STR(ua_as);
+            UA_STR(ua_gs);
+            get_ua_str(as_man->AS_UA, ua_as);
+            get_ua_str(as_man->CURR_GS_SAC, ua_gs);
+
+            key_install(key_trans.key, ua_as, ua_gs, key_trans.nonce->ptr, key_trans.nonce->len,
+                        &as_man->key_as_gs_h);
+
+
+            log_warn("???????????????? %d %d", snf_obj.GS_SAC, as_man->CURR_GS_SAC);
+            /* 未来使用切换状态机， 抛弃这种方法*/
+            if (snf_obj.GS_SAC != as_man->CURR_GS_SAC) {
+                snf_obj.gst_ho_complete_key_func(as_man->AS_SAC, as_man->AS_UA, as_man->CURR_GS_SAC);
+            }
+
+            free_buffer(key_trans.key);
+            free_buffer(key_trans.nonce);
+            as_man->gs_finish_auth = TRUE;
+            break;
             break;
         }
         case GS_SAC_RESP: {
