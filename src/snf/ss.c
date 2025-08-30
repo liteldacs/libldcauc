@@ -266,10 +266,11 @@ l_err finish_auc(void *args) {
         if (!save) return LD_ERR_NULL;
         bc = &save->bc;
     }
-    if (!bc || bc->opt->send_handler(bc, gen_pdu( &(gsnf_pkt_cn_t){
-                                         GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
-                                         sdu
-                                     }, &gsnf_pkt_cn_desc, "GSNF KEY TRANS"), generate_auz_info, &as_man->AS_SAC
+    if (!bc || bc->opt->send_handler(bc, gen_pdu(&(gsnf_pkt_cn_t){
+                                                     GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
+                                                     sdu
+                                                 }, &gsnf_pkt_cn_desc, "GSNF KEY TRANS"), generate_auz_info,
+                                     &as_man->AS_SAC
         ) != LD_OK) {
         log_warn("SGW send GS key failed");
         free_buffer(sdu);
@@ -397,10 +398,10 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *en) {
         bc = &save->bc;
     }
     //接收到RESP之后向目的GS发送KEY
-    if (!bc || bc->opt->send_handler(bc, gen_pdu( &(gsnf_pkt_cn_t){
-                                         GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, en->AS_SAC, ELE_TYP_8,
-                                         sdu
-                                     }, &gsnf_pkt_cn_desc, "GSNF KEY TRANS"), NULL, NULL
+    if (!bc || bc->opt->send_handler(bc, gen_pdu(&(gsnf_pkt_cn_t){
+                                                     GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, en->AS_SAC, ELE_TYP_8,
+                                                     sdu
+                                                 }, &gsnf_pkt_cn_desc, "GSNF KEY TRANS"), NULL, NULL
         )) {
         log_warn("SGW send GS key failed");
         free_buffer(sdu);
@@ -427,7 +428,7 @@ l_err send_sn_session_est_resp(void *args) {
     char ipv6_bin[16] = {0};
 
     // Convert IPv6 string to binary
-    if (inet_pton(AF_INET6, "2001:da8:a012:389:7bf3:43b7:9c07:4f01", ipv6_bin) != 1) {
+    if (inet_pton(AF_INET6, config.addr, ipv6_bin) != 1) {
         log_error("inet_pton");
         return LD_ERR_INTERNAL;
     }
@@ -480,9 +481,10 @@ l_err handle_send_msg(void *args, struct_desc_t *desc, snf_entity_t *as_man, KEY
         CLONE_TO_CHUNK(*sdu, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs))
         as_man->gs_conn->bc.opt->send_handler(&as_man->gs_conn->bc,
                                               gen_pdu(&(gsnf_pkt_cn_t){
-                                                  GSNF_SNF_UPLOAD, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_F, sdu
-                                              },
-                                              &gsnf_pkt_cn_desc, "GSNF SNF UPLOAD"), NULL, NULL);
+                                                          GSNF_SNF_UPLOAD, DEFAULT_GSNF_VERSION, as_man->AS_SAC,
+                                                          ELE_TYP_F, sdu
+                                                      },
+                                                      &gsnf_pkt_cn_desc, "GSNF SNF UPLOAD"), NULL, NULL);
     } else if (snf_obj.role == LD_AS) {
         snf_obj.trans_snp_func(as_man->AS_SAC, as_man->CURR_GS_SAC, lme_ss_pbs.start, pbs_offset(&lme_ss_pbs), TRUE);
     }
