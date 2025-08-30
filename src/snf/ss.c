@@ -267,8 +267,6 @@ l_err finish_auc(void *args) {
         bc = &save->bc;
     }
 
-    log_warn("%d %d", as_man->key_as_gs_b->len, as_man->shared_random->len);
-
     if (!bc || bc->opt->send_handler(bc, gen_pdu(&(gsnf_pkt_cn_t){
                                                      GSNF_KEY_TRANS, DEFAULT_GSNF_VERSION, as_man->AS_SAC, ELE_TYP_8,
                                                      sdu

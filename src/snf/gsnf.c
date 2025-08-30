@@ -369,8 +369,6 @@ l_err recv_gsg(basic_conn_t *bc) {
                 return LD_ERR_INTERNAL;
             }
 
-            log_warn("!!!!!!! %d", as_man->AS_SAC);
-
             pb_stream pbs;
             gs_key_trans_t key_trans = {
                 .key = init_buffer_ptr(ROOT_KEY_LEN),
@@ -391,8 +389,6 @@ l_err recv_gsg(basic_conn_t *bc) {
             key_install(key_trans.key, ua_as, ua_gs, key_trans.nonce->ptr, key_trans.nonce->len,
                         &as_man->key_as_gs_h);
 
-
-            log_warn("???????????????? %d %d", snf_obj.GS_SAC, as_man->CURR_GS_SAC);
             /* 未来使用切换状态机， 抛弃这种方法*/
             if (snf_obj.GS_SAC != as_man->CURR_GS_SAC) {
                 snf_obj.gst_ho_complete_key_func(as_man->AS_SAC, as_man->AS_UA, as_man->CURR_GS_SAC);
