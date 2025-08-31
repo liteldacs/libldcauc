@@ -224,6 +224,10 @@ l_err recv_gsnf(basic_conn_t *bc) {
                     log_info("================ AS { %d } has accessed in ================", gsnf_pkt->AS_SAC);
                     break;
                 }
+                case GSNF_SWITCH: {
+                    log_info("################ AS { %d } has switched ################", gsnf_pkt->AS_SAC);
+                    break;
+                }
                 case GSNF_EXIT: {
                     log_info("%%%%%%%%%%%%%%%% AS { %d } has exited %%%%%%%%%%%%%%%%", gsnf_pkt->AS_SAC);
                     delete_enode_by_sac(gsnf_pkt->AS_SAC, clear_snf_en);
@@ -394,9 +398,10 @@ l_err recv_gsg(basic_conn_t *bc) {
             key_install(key_trans.key, ua_as, ua_gs, key_trans.nonce->ptr, key_trans.nonce->len,
                         &as_man->key_as_gs_h);
 
+
             if (is_update) {
-                snf_obj.gst_ho_complete_key_func(as_man->AS_SAC, as_man->AS_UA, as_man->CURR_GS_SAC);
-                as_man->CURR_GS_SAC = snf_obj.GS_SAC;
+            snf_obj.gst_ho_complete_key_func(as_man->AS_SAC, as_man->AS_UA, as_man->CURR_GS_SAC);
+            as_man->CURR_GS_SAC = snf_obj.GS_SAC;
             }
 
             free_buffer(key_trans.key);

@@ -382,8 +382,6 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *en) {
 
     usleep(10000);
 
-    log_warn("%d %d", en->key_as_gs_b->len, en->shared_random->len);
-
     en->CURR_GS_SAC = key_upd_resp.SAC_dst;
     buffer_t *sdu = gen_pdu(&(gs_key_trans_t){
                                 .UA = en->AS_UA,
