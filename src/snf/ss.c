@@ -251,6 +251,7 @@ l_err finish_auc(void *args) {
 
     log_info("AS { %d } finishes auth", as_man->AS_SAC);
     buffer_t *sdu = gen_pdu(&(gs_key_trans_t){
+                                .UA = as_man->AS_UA,
                                 . key = as_man->key_as_gs_b,
                                 . nonce = as_man->shared_random
                             }, &gs_key_trans_desc, "GS KEY"
@@ -385,6 +386,7 @@ l_err recv_key_update_resp(buffer_t *buf, snf_entity_t *en) {
 
     en->CURR_GS_SAC = key_upd_resp.SAC_dst;
     buffer_t *sdu = gen_pdu(&(gs_key_trans_t){
+                                .UA = en->AS_UA,
                                 .key = en->key_as_gs_b,
                                 .nonce = en->shared_random
                             }, &gs_key_trans_desc, "GS KEY"

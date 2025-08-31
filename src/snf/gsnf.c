@@ -324,11 +324,13 @@ l_err recv_gsg(basic_conn_t *bc) {
         //        }
         case GS_SNF_UPLOAD:
         case GS_SNF_DOWNLOAD:
-        case GS_UP_UPLOAD_TRANSPORT:{
+        case GS_UP_UPLOAD_TRANSPORT: {
             gsg_pkt_t *gsnf_pkg;
             snf_entity_t *as_man;
             if (parse_gsg_pkt(mlt_ld->bc.read_pkt, &gsnf_pkg, &as_man) != LD_OK) {
-                log_error("Cannot parse gsnf pdu %d", (*mlt_ld->bc.read_pkt->ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN)));
+                log_error("Cannot parse gsnf pdu %d",
+                          (*mlt_ld->bc.read_pkt->ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN
+                          )));
                 return LD_ERR_INTERNAL;
             }
             switch (gsnf_pkg->TYPE) {
@@ -350,22 +352,11 @@ l_err recv_gsg(basic_conn_t *bc) {
             break;
         }
         case GS_KEY_TRANS: {
-            // gsg_pkt_t *gsnf_pkg = NULL;
-            // PARSE_DSTR_PKT(mlt_ld->bc.read_pkt, gsnf_pkg, sdu, gsg_pkt_desc, GSG_PKT_HEAD_LEN, 0);
-            // if (!gsnf_pkg) {
-            //     log_error("Cannot parse KET TRANS");
-            //     return LD_ERR_INTERNAL;
-            // }
-            //
-            // register_snf_en(ROLE_GS, gsnf_pkg->AS_SAC, 0, snf_obj.GS_SAC);
-            // snf_entity_t *as_man = get_enode(gsnf_pkg->AS_SAC);
-
-            // 改，用当前GS中是否存在as,判断是否为更新
-
-            gsg_pkt_t *gsnf_pkg;
-            snf_entity_t *as_man;
-            if (parse_gsg_pkt(mlt_ld->bc.read_pkt, &gsnf_pkg, &as_man) != LD_OK) {
-                log_error("Cannot parse gsnf pdu %d", (*mlt_ld->bc.read_pkt->ptr >> (BITS_PER_BYTE - GTYP_LEN)) & (0xFF >> (BITS_PER_BYTE - GTYP_LEN)));
+            gsg_pkt_t *gsnf_pkg = calloc(1, sizeof(gsg_pkt_t));
+            bool is_update = FALSE;
+            PARSE_DSTR_PKT(mlt_ld->bc.read_pkt, gsnf_pkg, sdu, gsg_pkt_desc, GSG_PKT_HEAD_LEN, 0);
+            if (!gsnf_pkg) {
+                log_error("Cannot parse KET TRANS");
                 return LD_ERR_INTERNAL;
             }
 
@@ -381,23 +372,38 @@ l_err recv_gsg(basic_conn_t *bc) {
                 return LD_ERR_INTERNAL;
             }
 
+            if (config.is_e304) {
+                if (has_enode_by_sac(gsnf_pkg->AS_SAC)) {
+                    // 首次
+                    is_update = FALSE;
+                } else {
+                    // 更新
+                    register_snf_en(ROLE_GS, gsnf_pkg->AS_SAC, key_trans.UA, snf_obj.GS_SAC);
+                    is_update = TRUE;
+                }
+            }
+
+            snf_entity_t *as_man = get_enode(gsnf_pkg->AS_SAC);
+
             UA_STR(ua_as);
             UA_STR(ua_gs);
-            get_ua_str(as_man->AS_UA, ua_as);
-            get_ua_str(as_man->CURR_GS_SAC, ua_gs);
+            get_ua_str(key_trans.UA, ua_as);
+            // get_ua_str(as_man->CURR_GS_SAC, ua_gs);
+            get_ua_str(snf_obj.GS_SAC, ua_gs);
 
             key_install(key_trans.key, ua_as, ua_gs, key_trans.nonce->ptr, key_trans.nonce->len,
                         &as_man->key_as_gs_h);
 
-            /* 未来使用切换状态机， 抛弃这种方法*/
-            if (snf_obj.GS_SAC != as_man->CURR_GS_SAC) {
+            if (is_update) {
                 snf_obj.gst_ho_complete_key_func(as_man->AS_SAC, as_man->AS_UA, as_man->CURR_GS_SAC);
+                as_man->CURR_GS_SAC = snf_obj.GS_SAC;
             }
 
             free_buffer(key_trans.key);
             free_buffer(key_trans.nonce);
+            free_buffer(gsnf_pkg->sdu);
+            free(gsnf_pkg);
             as_man->gs_finish_auth = TRUE;
-            break;
             break;
         }
         case GS_SAC_RESP: {
@@ -416,6 +422,17 @@ l_err recv_gsg(basic_conn_t *bc) {
                 return LD_ERR_INTERNAL;
             }
             snf_obj.trans_snp_func(data_pkt.AS_SAC, snf_obj.GS_SAC, data_pkt.sdu->ptr, data_pkt.sdu->len, FALSE);
+            break;
+        }
+        case GS_HO_REQUEST_ACK: {
+            gsg_ho_rqst_ack_t *ack = NULL;
+            if ((ack = parse_sdu(mlt_ld->bc.read_pkt, &gsg_ho_rqst_ack_desc, 4)) == NULL) {
+                log_error("Parse SDU failed!");
+                return LD_ERR_INVALID;
+            }
+
+            snf_obj.gss_ho_complete_key_func(ack->AS_SAC, snf_obj.GS_SAC, ack->NEXT_CO);
+            free(ack);
             break;
         }
         default: {

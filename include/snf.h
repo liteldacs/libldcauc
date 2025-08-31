@@ -22,7 +22,6 @@
 #define DFT_SGW_UA 10000
 
 
-
 enum S_TYP_E {
     AUC_RQST = 0x41,
     AUC_RESP = 0x42,
@@ -128,6 +127,7 @@ typedef struct snf_obj_s {
     trans_snp trans_snp_func;
     register_snf_fail register_fail_func;
     gst_ho_complete_key gst_ho_complete_key_func;
+    gss_ho_complete_key gss_ho_complete_key_func;
     inside_setup_entity setup_entity_func;
 
     //AS
@@ -316,6 +316,7 @@ typedef struct gsnf_key_upd_remind_s {
 
 
 typedef struct gs_key_trans_s {
+    uint32_t UA;
     buffer_t *key;
     buffer_t *nonce;
 } gs_key_trans_t;
@@ -341,6 +342,12 @@ typedef struct gsg_data_s {
     uint8_t IDTF;
     buffer_t *sdu;
 } gsg_data_t;
+
+typedef struct gsg_ho_rqst_ack_s {
+    uint8_t TYPE;
+    uint16_t AS_SAC;
+    uint16_t NEXT_CO;
+} gsg_ho_rqst_ack_t;
 
 #pragma pack()
 
@@ -369,6 +376,7 @@ extern struct_desc_t gsg_sac_rqst_desc;
 extern struct_desc_t gsg_sac_resp_desc;
 #define GSG_DATA_PKT_HEAD_LEN 3
 extern struct_desc_t gsg_data_desc;
+extern struct_desc_t gsg_ho_rqst_ack_desc;
 
 
 extern size_t as_recv_handlers_sz;

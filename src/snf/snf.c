@@ -42,7 +42,8 @@ void init_gs_snf_layer(config_t *config, trans_snp trans_snp, register_snf_fail 
 }
 
 void init_gs_snf_layer_inside(config_t *config, trans_snp trans_snp, register_snf_fail register_fail,
-                              gst_ho_complete_key gst_ho_complete_key, inside_setup_entity setup_entity) {
+                              gst_ho_complete_key gst_ho_complete_key, inside_setup_entity setup_entity,
+                              gss_ho_complete_key gss_ho_complete_key) {
     snf_obj.snf_emap = init_enode_map();
     snf_obj.role = LD_GS;
     snf_obj.GS_SAC = config->GS_SAC;
@@ -54,6 +55,7 @@ void init_gs_snf_layer_inside(config_t *config, trans_snp trans_snp, register_sn
     snf_obj.trans_snp_func = trans_snp;
     snf_obj.register_fail_func = register_fail;
     snf_obj.gst_ho_complete_key_func = gst_ho_complete_key;
+    snf_obj.gss_ho_complete_key_func = gss_ho_complete_key;
     snf_obj.setup_entity_func = setup_entity;
 
     if (init_client_gs_conn_service(config->gsnf_addr_v6, config->gsnf_remote_port, config->gsnf_local_port, recv_gsg)
@@ -397,11 +399,9 @@ int8_t gst_handover_complete(uint16_t AS_SAC) {
 
 int8_t inside_combine_sac_request(uint32_t UA) {
     if (!snf_obj.is_e304) return LDCAUC_WRONG_PARA;
-    log_warn("!!!!!!!!!!!!!!");
     gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(struct gsg_sac_rqst_s){
                                                            GS_SAC_RQST, UA,
                                                        }, &gsg_sac_rqst_desc, "GS SAC RQST"), NULL, NULL);
-    log_warn("!!!!!!!!!!!!!!");
     return LDCAUC_OK;
 }
 
@@ -411,5 +411,13 @@ int8_t inside_combine_update_user_msg(uint16_t AS_SAC, uint8_t *snp_buf, size_t 
     gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsg_data_t){
                                                            GS_DATA_DOWN, AS_SAC, 0, in_buf
                                                        }, &gsg_data_desc, "GS DATA DOWN"), NULL, NULL);
+    return LDCAUC_OK;
+}
+
+int8_t direct_combine_send_ho_rqst(uint16_t SAC, uint16_t CO) {
+    if (!config.direct) return LDCAUC_WRONG_PARA;
+    gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsg_ho_rqst_ack_t){
+                                                           GS_HO_REQUEST_ACK, SAC, CO,
+                                                       }, &gsg_ho_rqst_ack_desc, "GS HO RQST"), NULL, NULL);
     return LDCAUC_OK;
 }

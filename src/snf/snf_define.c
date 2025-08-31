@@ -265,6 +265,8 @@ static field_desc gs_sac_resp_fields[] = {
 struct_desc_t gs_sac_resp_desc = {"GS SAC RESP", gs_sac_resp_fields};
 
 static field_desc gs_key_trans_fields[] = {
+    {ft_set, 28, "AS UA", NULL},
+    {ft_pad, 0, "PAD", NULL},
     {ft_dl_str, 0, "KEY", NULL},
     {ft_dl_str, 0, "NONCE", NULL},
     {ft_end, 0, NULL, NULL},
@@ -299,6 +301,14 @@ static field_desc gsg_data_fields[] = {
 };
 struct_desc_t gsg_data_desc = {"GSG DATA", gsg_data_fields};
 
+static field_desc gsg_ho_rqst_ack_fields[] = {
+    {ft_set, 4, "TYPE", NULL},
+    {ft_set, 12, "AS SAC", NULL},
+    {ft_set, 9, "CO", NULL},
+    {ft_pad, 0, "PAD", NULL},
+    {ft_end, 0, NULL, NULL},
+};
+struct_desc_t gsg_ho_rqst_ack_desc = {"GSG HO RQST ACK", gsg_ho_rqst_ack_fields};
 
 
 size_t as_recv_handlers_sz = 3;
@@ -327,7 +337,6 @@ struct hashmap *init_enode_map() {
 }
 
 const void *set_enode(snf_entity_t *en) {
-
     if (!en) return NULL;
 
     const void *ret = hashmap_set(snf_obj.snf_emap, en);
