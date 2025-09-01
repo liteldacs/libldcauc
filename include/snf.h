@@ -309,7 +309,7 @@ typedef struct gsnf_key_upd_remind_s {
     uint8_t G_TYP;
     uint8_t VER;
     uint16_t AS_SAC;
-    uint8_t KEY_TYPE;
+    uint8_t ELEMENT_TYPE;
     uint16_t GSS_SAC;
     uint16_t GST_SAC;
 } gsnf_key_upd_remind_t;
@@ -342,6 +342,16 @@ typedef struct gsg_data_s {
     uint8_t IDTF;
     buffer_t *sdu;
 } gsg_data_t;
+
+static void free_gsg_data(void *args) {
+    gsg_data_t *data = args;
+    if (data) {
+        if (data->sdu) {
+            free_buffer(data->sdu);
+        }
+        free(data);
+    }
+}
 
 typedef struct gsg_ho_rqst_ack_s {
     uint8_t TYPE;

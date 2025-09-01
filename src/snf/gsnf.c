@@ -422,11 +422,16 @@ l_err recv_gsg(basic_conn_t *bc) {
             break;
         }
         case GS_DATA_UP: {
-            gsg_data_t data_pkt;
-            if (parse_gsg_data_pkt(mlt_ld->bc.read_pkt, &data_pkt) != LD_OK) {
-                return LD_ERR_INTERNAL;
-            }
-            snf_obj.trans_snp_func(data_pkt.AS_SAC, snf_obj.GS_SAC, data_pkt.sdu->ptr, data_pkt.sdu->len, FALSE);
+            gsg_data_t *data_pkt = calloc(1, sizeof(gsg_data_t));
+
+            PARSE_DSTR_PKT(mlt_ld->bc.read_pkt, data_pkt, sdu, gsg_data_desc, GSG_DATA_PKT_HEAD_LEN, 0);
+            // if (parse_gsg_data_pkt(mlt_ld->bc.read_pkt, &data_pkt) != LD_OK) {
+            //     return LD_ERR_INTERNAL;
+            // }
+
+            snf_obj.trans_snp_func(data_pkt->AS_SAC, snf_obj.GS_SAC, data_pkt->sdu->ptr, data_pkt->sdu->len, FALSE);
+
+            free_gsg_data(data_pkt);
             break;
         }
         case GS_HO_REQUEST_ACK: {
