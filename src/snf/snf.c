@@ -236,7 +236,7 @@ int8_t unregister_snf_en(uint16_t AS_SAC) {
 
 int8_t exit_snf_en(uint16_t AS_SAC) {
     if (snf_obj.role != ROLE_GS) return LDCAUC_WRONG_ROLE;
-    snf_obj.is_merged == FALSE
+    if ((snf_obj.is_merged == FALSE
         ? gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsnf_st_chg_t){
                                                                  .G_TYP = GSNF_STATE_CHANGE,
                                                                  .VER = DEFAULT_GSNF_VERSION,
@@ -246,7 +246,10 @@ int8_t exit_snf_en(uint16_t AS_SAC) {
                                                              }, &gsnf_st_chg_desc, "GSNF_STATE_CHANGE"), NULL, NULL)
         : gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc,
                                                          gen_pdu(&(gsg_as_exit_t){GS_AS_EXIT, AS_SAC},
-                                                                 &gsg_as_exit_desc, "GS_AS_EXIT"), NULL, NULL);
+                                                                 &gsg_as_exit_desc, "GS_AS_EXIT"), NULL, NULL)) != LD_OK) {
+        log_error("Cannot send exit message");
+        return LD_ERR_INTERNAL;
+    }
     return delete_enode_by_sac(AS_SAC, clear_snf_en);
 }
 
