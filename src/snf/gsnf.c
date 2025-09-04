@@ -376,7 +376,7 @@ l_err recv_gsg(basic_conn_t *bc) {
                 return LD_ERR_INTERNAL;
             }
 
-            if (config.is_e304) {
+            if (snf_obj.is_e304) {
                 if (has_enode_by_sac(gsnf_pkg->AS_SAC)) {
                     // 首次
                     is_update = FALSE;
