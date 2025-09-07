@@ -227,6 +227,14 @@ int8_t generate_rkey() {
             free(buf_dir);
             return -1;
         }
+
+        QueryResult_for_queryid *qr_mk = query_id(db_name, SGW_KEY_TABLE, default_ASs[i], "000010000", ROOT_KEY, PRE_ACTIVATION);
+        if (qr_mk->count == 0) {
+            log_error("Query mkid failed.\n");
+            return -1;
+        }
+
+        enable_key(db_name, SGW_KEY_TABLE, qr_mk->ids[0]);
         free(buf_dir);
         log_info("Generate Rootkey for %s has Succeed", default_ASs[i]);
     }
