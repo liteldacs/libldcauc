@@ -56,11 +56,7 @@ static char *get_table_name(ldacs_roles role) {
     }
 }
 
-#ifdef UNUSE_CRYCARD
-#define HOME_DIR "/home/jiaxv/"
-#else
 #define HOME_DIR "/root/"
-#endif
 
 
 const size_t as_count = 30;
