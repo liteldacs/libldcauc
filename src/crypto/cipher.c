@@ -11,22 +11,22 @@ l_err encrypt_uint8(void *key, uint8_t *in, size_t in_len, uint8_t *out, size_t 
     uint8_t iv[16] = {0};
     km_encrypt(key, ALGO_ENC_AND_DEC, iv, in, in_len, out, (uint32_t *) out_len, TRUE);
 
-// #ifdef DEBUG
-    // log_buf(LOG_DEBUG, "原始报文：", in, in_len);
-    // log_buf(LOG_DEBUG, "加密后报文：", out, *out_len);
-
     if (!config.direct) {
-        log_debug("Original: %s", in);
-        log_debug("After ENC: %s", out);
+        // log_debug("Original: %s", in);
+        // log_debug("After ENC: %s", out);
 
         // log_buf(LOG_DEBUG, "原始报文：", in, in_len);
         // log_buf(LOG_DEBUG, "解密后报文：", out, *out_len);
-    }
-// #endif
 
-    // uint8_t plain[128] = {0};
-    // uint32_t sz = 0;
-    // km_decrypt(key, ALGO_ENC_AND_DEC, iv, out, *out_len, plain, &sz, TRUE);
+        buffer_t *in_buf = encode_b64_buffer(0, in, in_len);
+        buffer_t *out_buf = encode_b64_buffer(0, out, *out_len);
+
+        log_buf(LOG_DEBUG, "Original (base64): ", in_buf->ptr, in_buf->len);
+        log_buf(LOG_DEBUG, "After encrypt (base64): ", out_buf->ptr, out_buf->len);
+
+        free_buffer(in_buf);
+        free_buffer(out_buf);
+    }
 
     return LD_OK;
 }
@@ -39,8 +39,17 @@ l_err decrypt_uint8(void *key, uint8_t *in, size_t in_len, uint8_t *out, size_t 
         // log_buf(LOG_DEBUG, "原始报文：", in, in_len);
         // log_buf(LOG_DEBUG, "解密后报文：", out, *out_len);
 
-        log_debug("Original: %s", in);
-        log_debug("After DEC: %s", out);
+        // log_debug("Original: %s", in);
+        // log_debug("After DEC: %s", out);
+
+        buffer_t *in_buf = encode_b64_buffer(0, in, in_len);
+        buffer_t *out_buf = encode_b64_buffer(0, out, *out_len);
+
+        log_buf(LOG_DEBUG, "Original (base64): ", in_buf->ptr, in_buf->len);
+        log_buf(LOG_DEBUG, "After decrypt (base64): ", out_buf->ptr, out_buf->len);
+
+        free_buffer(in_buf);
+        free_buffer(out_buf);
     }
 
     return LD_OK;
