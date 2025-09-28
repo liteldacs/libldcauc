@@ -301,9 +301,11 @@ l_km_err as_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs_
         return err;
     }
 
+
     if ((err = get_handle_from_db(db_name, table_name, qr_mk->ids[0], key_as_gs)) != LD_KM_OK) {
         log_error("err:%08x", err);
     }
+
 
     free(db_name);
     return err;
