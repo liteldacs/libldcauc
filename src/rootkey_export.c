@@ -56,7 +56,8 @@ static char *get_table_name(ldacs_roles role) {
     }
 }
 
-#define HOME_DIR "/root/"
+//#define HOME_DIR "/root/"
+#define HOME_DIR "/home/jiaxv/"
 
 
 const size_t as_count = 40;

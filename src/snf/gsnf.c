@@ -400,8 +400,8 @@ l_err recv_gsg(basic_conn_t *bc) {
 
 
             if (is_update) {
-            snf_obj.gst_ho_complete_key_func(as_man->AS_SAC, as_man->AS_UA, as_man->CURR_GS_SAC);
-            as_man->CURR_GS_SAC = snf_obj.GS_SAC;
+                snf_obj.gst_ho_complete_key_func(as_man->AS_SAC, as_man->AS_UA, as_man->CURR_GS_SAC);
+                as_man->CURR_GS_SAC = snf_obj.GS_SAC;
             }
 
             free_buffer(key_trans.key);
@@ -440,8 +440,13 @@ l_err recv_gsg(basic_conn_t *bc) {
                 log_error("Parse SDU failed!");
                 return LD_ERR_INVALID;
             }
+            snf_entity_t *as_man = get_enode(ack->AS_SAC);
+            if (!as_man) {
+                log_error("No such AS!");
+                return LD_ERR_NULL;
+            }
 
-            snf_obj.gss_ho_complete_key_func(ack->AS_SAC, snf_obj.GS_SAC, ack->NEXT_CO);
+            snf_obj.gss_ho_complete_key_func(ack->AS_SAC, as_man->CURR_GS_SAC, ack->NEXT_CO);
             free(ack);
             break;
         }

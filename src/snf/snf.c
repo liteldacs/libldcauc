@@ -357,10 +357,13 @@ int8_t upload_snf(uint8_t failed_type, uint16_t AS_SAC, uint16_t GS_SAC, uint8_t
 }
 
 int8_t gss_handover_request_trigger(uint16_t AS_SAC, uint16_t GSS_SAC, uint16_t GST_SAC) {
-    if (snf_obj.is_merged == TRUE)
+    if (snf_obj.is_merged == TRUE) {
+        snf_entity_t *as_man = get_enode(AS_SAC);
+        as_man->CURR_GS_SAC = GST_SAC;
         gs_conn_service.sgw_conn->bc.opt->send_handler(&gs_conn_service.sgw_conn->bc, gen_pdu(&(gsg_ho_req_t){
                                                                GS_HO_REQUEST, AS_SAC, GSS_SAC, GST_SAC,
                                                            }, &gsg_ho_req_desc, "GS HO REQUEST"), NULL, NULL);
+    }
     return LDCAUC_OK;
 }
 
