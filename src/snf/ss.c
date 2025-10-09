@@ -10,7 +10,6 @@
 #include <ld_santilizer.h>
 #include "gsc_conn.h"
 
-pthread_t data_th;
 
 
 /**
