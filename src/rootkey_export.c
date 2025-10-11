@@ -7,7 +7,7 @@
 #include <ld_log.h>
 #include "crypto/key.h"
 
-static char *get_db_name(ldacs_roles role, const char *ua) {
+static char *e_get_db_name(ldacs_roles role, const char *ua) {
     char *buf_dir = calloc(PATH_MAX, sizeof(char));
     char *db_name = NULL;
     // char *home_dir = get_home_dir();
@@ -43,18 +43,7 @@ static char *get_db_name(ldacs_roles role, const char *ua) {
     return buf_dir;
 }
 
-static char *get_table_name(ldacs_roles role) {
-    switch (role) {
-        case LD_AS:
-            return AS_KEY_TABLE;
-        case LD_GS:
-            return GS_KEY_TABLE;
-        case LD_SGW:
-            return SGW_KEY_TABLE;
-        default:
-            return NULL;
-    }
-}
+
 
 //#define HOME_DIR "/root/"
 #define HOME_DIR "/home/jiaxv/"
@@ -208,7 +197,7 @@ int main(int argc, char **argv) {
     // #ifdef UNUSE_CRYCARD
     //     generate_kek(1);
     // #endif
-    //     char *db_name = get_db_name(LD_SGW);
+    //     char *db_name = e_get_db_name(LD_SGW);
     //     char *table_name = get_table_name(LD_SGW);
     //     if (km_rkey_gen_export("000010010", "000010000", ROOT_KEY_LEN, DEFAULT_VALIDATE, db_name, table_name,
     //                            HOME_DIR".ldcauc/keystore/000010010_rootkey.bin")) {
@@ -222,7 +211,7 @@ int main(int argc, char **argv) {
 
 
 int8_t generate_rkey() {
-    char *db_name = get_db_name(LD_SGW, "000010000");
+    char *db_name = e_get_db_name(LD_SGW, "000010000");
 
     for (int i = 0; i < as_count; i++) {
         char *buf_dir = calloc(PATH_MAX, sizeof(char));
@@ -250,7 +239,7 @@ int8_t generate_rkey() {
 }
 
 int8_t write_rkey_tocard(void) {
-    // char *db_name = get_db_name(is_SGW ? LD_SGW : LD_AS);
+    // char *db_name = e_get_db_name(is_SGW ? LD_SGW : LD_AS);
 
     for (int i = 0; i < as_count; i++) {
         char *dir_buf = calloc(PATH_MAX, sizeof(char));

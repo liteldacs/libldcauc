@@ -60,5 +60,9 @@ l_km_err sgw_update_mkey(const char *sgw_ua, const char *gs_s_ua, const char *gs
 
 l_km_err revoke_key(ldacs_roles role, const char *owner1, const char *owner2, enum KEY_TYPE key_type);
 
+char *get_db_name(ldacs_roles role, const char *ua);
+
+char *get_table_name(ldacs_roles role);
+
 
 #endif //LDACS_SIM_KEY_H
