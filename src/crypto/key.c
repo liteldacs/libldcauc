@@ -8,9 +8,11 @@ char *get_db_name(ldacs_roles role, const char *ua) {
     char *buf_dir = calloc(PATH_MAX, sizeof(char));
     char *db_name = NULL;
 
-    snprintf(buf_dir, PATH_MAX, "%s%s", get_home_dir(), BASE_PATH);
+    char *home_dir = get_home_dir();
+    snprintf(buf_dir, PATH_MAX, "%s%s", home_dir, BASE_PATH);
     if (check_path(buf_dir) != LD_OK) {
         free(buf_dir);
+        free(home_dir);
         return NULL;
     }
 
@@ -29,10 +31,12 @@ char *get_db_name(ldacs_roles role, const char *ua) {
         }
         default: {
             free(buf_dir);
+            free(home_dir);
             return NULL;
         }
     }
-    snprintf(buf_dir, PATH_MAX, "%s%s%s_%s.db", get_home_dir(), BASE_PATH, db_name, ua);
+    snprintf(buf_dir, PATH_MAX, "%s%s%s_%s.db", home_dir, BASE_PATH, db_name, ua);
+    free(home_dir);
 
     return buf_dir;
 }
